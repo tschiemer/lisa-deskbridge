@@ -62,7 +62,7 @@ namespace LisaDeskbridge {
 
     void Bridge::runloop(){
 
-        std::cerr << "Starting run loop.." << std::endl;
+        std::cout << "Starting run loop.." << std::endl;
 
 #if defined(__APPLE__)
 // On macOS, observation can *only* be done in the main thread
@@ -101,11 +101,11 @@ namespace LisaDeskbridge {
     }
 
     bool Bridge::startLisaControllerProxy(){
-        std::cerr << "Starting L-ISA Controller Proxy.." << std::endl;
+        std::cout << "Starting L-ISA Controller Proxy.." << std::endl;
         try {
             lisaControllerProxy.start(localPort, lisaControllerHost, lisaControllerPort);
         } catch (const std::exception& e){
-            std::cerr << e.what() << std::endl;
+            std::cout << e.what() << std::endl;
             return false;
         }
 
@@ -113,7 +113,7 @@ namespace LisaDeskbridge {
     }
 
     void Bridge::stopLisaControllerProxy(){
-        std::cerr << "Stopping L-ISA Controller Proxy.." << std::endl;
+        std::cout << "Stopping L-ISA Controller Proxy.." << std::endl;
         lisaControllerProxy.stop();
     }
 

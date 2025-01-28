@@ -34,17 +34,17 @@ namespace LisaDeskbridge {
         mInPortName = inPortName;
         mOutPortName = outPortName;
 
-        std::cerr << "Scanning for IN port = '" << mInPortName << "'." << std::endl;
-        std::cerr << "Scanning for OUT port = '" << mOutPortName << "'." << std::endl;
+        std::cout << "Scanning for IN port = '" << mInPortName << "'." << std::endl;
+        std::cout << "Scanning for OUT port = '" << mOutPortName << "'." << std::endl;
 
         observer = new libremidi::observer ({
                 .track_hardware = true,
                 .track_virtual = true,
                 .input_added = [&](const libremidi::input_port &port){
-//                     std::cerr << "Added IN port = " << port.port_name << std::endl;
+//                     std::cout << "Added IN port = " << port.port_name << std::endl;
 
                     if (port.port_name == mInPortName){
-                        std::cerr << "Found MIDI IN port '" << mInPortName << "'. Opening.." << std:: endl;
+                        std::cout << "Found MIDI IN port '" << mInPortName << "'. Opening.." << std:: endl;
                         if (midiIn.is_port_open()){
                             midiIn.close_port();
                         }
@@ -67,7 +67,7 @@ namespace LisaDeskbridge {
 //                    std::cerr << "Added OUT port = " << port.port_name << std::endl;
 
                     if (port.port_name == mOutPortName){
-                        std::cerr << "Found MIDI OUT port '" << mOutPortName << "'. Opening.." << std:: endl;
+                        std::cout << "Found MIDI OUT port '" << mOutPortName << "'. Opening.." << std:: endl;
                         if (midiOut.is_port_open()){
                             midiOut.close_port();
                         }
@@ -83,7 +83,7 @@ namespace LisaDeskbridge {
 
                     if (port.port_name == mOutPortName){
                         midiOut.close_port();
-                        std::cerr << "Lost MIDI OUT port '" << mOutPortName << "'. Waiting for reconnection..." << std:: endl;
+                        std::cout << "Lost MIDI OUT port '" << mOutPortName << "'. Waiting for reconnection..." << std:: endl;
                     }
                 }
         });

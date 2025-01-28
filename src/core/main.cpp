@@ -143,10 +143,10 @@ int main(int argc, char * argv[]) {
 
     bridge = LisaDeskbridge::Bridge::factory(opts.bridgeName, opts.bridgeOpts);
     if (bridge == nullptr){
-        std::cerr << "Invalid bridgeName: " << opts.bridgeName << std::endl;
+        std::cout << "Invalid bridgeName: " << opts.bridgeName << std::endl;
         return EXIT_FAILURE;
     }
-    std::cerr << "Using bridge: " << opts.bridgeName << std::endl;
+    std::cout << "Using bridge: " << opts.bridgeName << std::endl;
 
     bridge->setLisaControllerOpts(opts.localPort, opts.lisaHost, opts.lisaPort);
 

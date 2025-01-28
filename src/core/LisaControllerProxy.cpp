@@ -206,7 +206,7 @@ namespace LisaDeskbridge {
             return;
         }
 
-        std::cerr << "Listening for L-ISA Controller messages on port " << listenPort << std::endl;
+        std::cout << "Listening for L-ISA Controller messages on port " << listenPort << std::endl;
 
         udpListeningReceiveSocket = new UdpListeningReceiveSocket(
                 IpEndpointName( IpEndpointName::ANY_ADDRESS, listenPort),
@@ -217,7 +217,7 @@ namespace LisaDeskbridge {
             socket->Run();
         }, udpListeningReceiveSocket);
 
-        std::cerr << "Sending to L-ISA Controller on host " << controllerAddress << " on port " << controllerPort << std::endl;
+        std::cout << "Sending to L-ISA Controller on host " << controllerAddress << " on port " << controllerPort << std::endl;
 
         udpTransmitSocket = new UdpTransmitSocket( IpEndpointName( controllerAddress.data(), controllerPort ) );
 
@@ -291,7 +291,7 @@ namespace LisaDeskbridge {
             }
             else {
 
-                std::cerr << "Received unknown packet: " << m.AddressPattern() << std::endl;
+                std::cout << "Received unknown packet: " << m.AddressPattern() << std::endl;
             }
         } catch( osc::Exception& e ){
             // any parsing errors such as unexpected argument types, or

@@ -174,6 +174,9 @@ namespace LisaDeskbridge {
              */
             void setReverbFaderPos(float pos);
 
+            void setMonitoringFaderPos(float pos);
+            void setUserFaderNPos(int fader, float pos);
+
             /**
              * Mute/Unmute reverb
              * @param on

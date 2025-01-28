@@ -168,9 +168,9 @@ namespace LisaDeskbridge {
 
     // User Fader
 
-    constexpr char kMsgSetUserFaderGain[]      = "/ext/fader%u/gain";           // 0.0 - 1.0
-    constexpr char kMsgSetUserFaderPos[]       = "/ext/fader%u/faderpos";       // 0.0 - 1.0
-    constexpr char kMsgSetUserFaderMute[]      = "/ext/fader%u/mute";           // 0, 1
+    constexpr char kMsgSetUserFaderNGain[]      = "/ext/fader%u/gain";           // 0.0 - 1.0
+    constexpr char kMsgSetUserFaderNPos[]       = "/ext/fader%u/faderpos";       // 0.0 - 1.0
+    constexpr char kMsgSetUserFaderNMute[]      = "/ext/fader%u/mute";           // 0, 1
 
     // Source selection
 
@@ -508,5 +508,24 @@ namespace LisaDeskbridge {
 
         sendToController(kMsgSetReverbMute, 1, INT_T, (int)on);
     }
+
+    void LisaControllerProxy::setMonitoringFaderPos(float pos)  {
+        assert(isRunning());
+        assert(0.0 <= pos && pos <= 1.0);
+
+        sendToController(kMsgSetMonitorFaderPos, 1, FLOAT_T, pos);
+    }
+
+    void LisaControllerProxy::setUserFaderNPos(int fader, float pos) {
+        assert(isRunning());
+        assert(1 <= fader && fader <= 2);
+        assert(0.0 <= pos && pos <= 1.0);
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetUserFaderNPos, fader);
+
+        sendToController(msg, 1, FLOAT_T, pos);
+    }
+
 
 } // LisaDeskbridge

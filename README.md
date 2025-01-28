@@ -81,13 +81,22 @@ SQ6 configuration can be done/designed as follows:
 | Soft rotary 2        | CC     | 1       | 2      | relative* | Relative pan spread of selected sources       |                    |
 | Soft rotary 3        | CC     | 1       | 3      | relative* | Relative depth of selected sources            |                    |
 | Soft rotary 4        | CC     | 1       | 4      | relative* | Relative elevation spread of selected sources |                    |
-|                      | CC     | 1       | 2      | relative* | Relative width of selected sources            | ALT button pressed |
-|                      | CC     | 1       | 4      | relative* | Relative aux send of last one-selected source | ALT button pressed |
+| Soft rotary 2**      | CC     | 1       | 2      | relative* | Relative width of selected sources            | ALT button pressed |
+| Soft rotary 4**      | CC     | 1       | 4      | relative* | Relative aux send of last one-selected source | ALT button pressed |
+| Soft rotary 6***     | CC     | 1       | 6      | relative* | Relative width of selected sources            |                    |
+| Soft rotary 8***     | CC     | 1       | 8      | relative* | Relative aux send of last one-selected source |                    |
 | Soft button X        | NoteOn | 2       | Y      |           | Select group Y                                |                    |
-| MIDI Fader 1         | CC     | 2       | 1      | absolute  | Master fader                                  |                    |
-| MIDI Fader 2         | CC     | 2       | 2      | absolute  | Reverb fader                                  |                    |
+| MIDI Fader 1         | CC     | 2       | 0      | absolute  | Master fader                                  |                    |
+| MIDI Fader 2         | CC     | 2       | 1      | absolute  | Reverb fader                                  |                    |
+| MIDI Fader 3         | CC     | 2       | 2      | absolute  | Monitoring fader                              |                    |
+| MIDI Fader 4         | CC     | 2       | 3      | absolute  | User fader 1                                  |                    |
+| MIDI Fader 5         | CC     | 2       | 4      | absolute  | User fader 2                                  |                    |
 
 *7bit signed int, ie 1-64 are positive values, 127-64 are negative values
+
+**These rotaries have two functions depending on wether the ALT-Button is pressed or not.
+
+***In case somebody has a SQ7 with 8 soft rotaries, all can be assigned directly without having to rely on the ALT button.
 
 The effect of the buttons in combination with channel selects is as follows:
 

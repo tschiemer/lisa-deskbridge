@@ -241,7 +241,7 @@ namespace LisaDeskbridge {
 //            printf("SQ CC ch(%d) cc(%d) value(%d)\n", channel, cc, value);
 
             if (channel == 1){
-                if (1 <= cc && cc <= 4){
+                if (1 <= cc && cc <= 8){
                     // turn a signed 7-bit value into a proper int value we can work with
                     int i = (int)(signed char)(value | ((value & 0b01000000) << 1));
                     float r = (float)i * kDefaultRelativeStepSize;
@@ -268,6 +268,16 @@ namespace LisaDeskbridge {
                         } else {
                             sq6->lisaControllerProxy.setSelectedSourceRelativeAuxSend(r);
                         }
+                    } else if (cc == 5){
+                        // not used
+                    } else if (cc == 6){
+                        if (sq6->softBtn4 == ButtonState_Released) {
+                            sq6->lisaControllerProxy.setSelectedSourcesRelativeWidth(r);
+                    } else if (cc == 7){
+                            // not used
+                        }
+                    } else if (cc == 8){
+                        sq6->lisaControllerProxy.setSelectedSourceRelativeAuxSend(r);
                     }
                 }
             } // channel == 1
@@ -279,6 +289,18 @@ namespace LisaDeskbridge {
                 // reverb fader
                 else if (cc == 1){
                     sq6->lisaControllerProxy.setReverbFaderPos((float)value / 127.0);
+                }
+                // monitoring fader
+                else if (cc == 2){
+                    sq6->lisaControllerProxy.setMonitoringFaderPos((float)value / 127.0);
+                }
+                // user fader 1
+                else if (cc == 3){
+                    sq6->lisaControllerProxy.setUserFaderNPos(1,(float)value / 127.0);
+                }
+                // user fader 2
+                else if (cc == 4){
+                    sq6->lisaControllerProxy.setUserFaderNPos(2,(float)value / 127.0);
                 }
             } // channel == 2
         }

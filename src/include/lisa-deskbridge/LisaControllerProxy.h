@@ -21,24 +21,17 @@
 
 #include <thread>
 
+#include "LisaController.h"
+
 #include "osc/OscPacketListener.h"
 #include "ip/UdpSocket.h"
 
 namespace LisaDeskbridge {
 
-    constexpr uint16_t kLisaControllerPortDefault = 8880;
-    constexpr std::basic_string_view<char> kLisaControllerHostDefault = "127.0.0.1";
-    constexpr uint16_t kRemotePortDefault = 9000;
 
     class LisaControllerProxy : public osc::OscPacketListener {
 
         public:
-
-            typedef unsigned int SourceId_t;
-            typedef unsigned int GroupId_t;
-            typedef unsigned int DeviceId_t;
-
-            enum CoordFormat_t {CoordFormatLISA, CoordFormatADM};
 
             class IDelegate {
                 public:
@@ -58,7 +51,7 @@ namespace LisaDeskbridge {
 
         protected:
 
-            enum arg_t {BOOL_T, INT_T, FLOAT_T};
+            enum arg_t {INT_T, FLOAT_T, STRING_T};
 
             IDelegate * iDelegate = nullptr;
             UdpListeningReceiveSocket * udpListeningReceiveSocket = nullptr;
@@ -84,111 +77,166 @@ namespace LisaDeskbridge {
 
             virtual void ProcessMessage( const osc::ReceivedMessage& m, const IpEndpointName& remoteEndpoint );
 
-            SourceId_t getLastSelectedSource(){ return lastSelectedSource; };
+        public:
 
-            void selectSource(SourceId_t id);
-            void addSourceToSelection(SourceId_t id);
-            void removeSourceFromSelection(SourceId_t id);
-            void selectGroup(SourceId_t id);
 
-            void clearSelection();
+            // Source control flags
 
-            /**
-             * Set relative pan of selected sources
-             * @param rpan [-1.0-1.0]
-             */
-            void setSelectedSourcesRelativePan(float rpan);
+            void setSourceControlFlagPan(SourceId_t src, ControlFlag_t flag);
+            void setSourceControlFlagWidth(SourceId_t src, ControlFlag_t flag);
+            void setSourceControlFlagDistance(SourceId_t src, ControlFlag_t flag);
+            void setSourceControlFlagElevation(SourceId_t src, ControlFlag_t flag);
+            void setSourceControlFlagAuxSend(SourceId_t src, ControlFlag_t flag);
 
-            /**
-             * Set relative width of selected sources
-             * @param rwidth [-1.0-1.0]
-             */
-            void setSelectedSourcesRelativeWidth(float rwidth);
 
-            /**
-             * Set relative distance of selected sources
-             * @param rdist [-1.0-1.0]
-             */
-            void setSelectedSourcesRelativeDistance(float rdist);
+            // Source parameters
 
-            /**
-             * Set relative elevation of selected sources
-             * @param relev [-1.0-1.0]
-             */
-            void setSelectedSourcesRelativeElevation(float relev);
+            void setSourcePan(SourceId_t src, float value);
+            void setSourceWidth(SourceId_t src, float value);
+            void setSourceDistance(SourceId_t src, float value);
+            void setSourceElevation(SourceId_t src, float value);
+            void setSourcePanSpread(SourceId_t src, float value);
+            void setSourceAuxSend(SourceId_t src, float value);
 
-            /**
-             * Set relative pan spread of selected sources
-             * @param rspread
-             */
-            void setSelectedSourcesRelativePanSpread(float rspread);
+            void setSourceAllParameters(SourceId_t src, float pan, float width, float depth, float elevation, float auxSend);
 
-            void setSourceRelativeAuxSend(SourceId_t id, float rsend);
+            void setSourceRelativePan(SourceId_t src, float value);
+            void setSourceRelativeWidth(SourceId_t src, float value);
+            void setSourceRelativeDistance(SourceId_t src, float value);
+            void setSourceRelativeElevation(SourceId_t src, float value);
+            void setSourceRelativePanSpread(SourceId_t src, float value);
+            void setSourceRelativeAuxSend(SourceId_t src, float value);
 
             void setSelectedSourceRelativeAuxSend(float rsend);
 
-            /**
-             * Set source solo
-             * @param src
-             */
-            void setSourceSolo(SourceId_t id, bool on);
+            void setSourceFxIntensity(SourceId_t src, FxId_t fx, float value);
+            void setSourceFxActive(SourceId_t src, FxId_t fx, bool on);
 
+            void setSelectedSourcesRelativePan(float rpan);
+            void setSelectedSourcesRelativeWidth(float rwidth);
+            void setSelectedSourcesRelativeDistance(float rdist);
+            void setSelectedSourcesRelativeElevation(float relev);
+            void setSelectedSourcesRelativePanSpread(float rspread);
+
+
+            // Source Solo, Snap, Delay
+
+            void setSourceSolo(SourceId_t src, bool on);
             void setSelectedSourceSolo(bool on);
-
-            /**
-             * Snap selected source to speaker
-             * @param src
-             */
-            void snapSourceToSpeaker(SourceId_t id);
-
+            void setSourceStaticDelayValue(SourceId_t src, float value);
+            void setSelectedSourceStaticDelayValue(float value);
+            void snapSourceToSpeaker(SourceId_t src);
             void snapSelectedSourceToSpeaker();
 
-            /**
-             * Set master gain
-             *
-             * @param gain
-             */
+
+            // Source processing
+
+            void setSourceOptGain(SourceId_t src, bool on);
+            void setSourceOptHpf(SourceId_t src, bool on);
+            void setSourceOptDelayEnabled(SourceId_t src, bool on);
+            void setSourceOptDelayMode(SourceId_t src, DelayMode_t mode);
+            void setSourceOptReverbEarly(SourceId_t src, bool on);
+            void setSourceOptReverbCluster(SourceId_t src, bool on);
+            void setSourceOptReverbLate(SourceId_t src, bool on);
+            void setSourceOptDirectSound(SourceId_t src, bool on);
+
+
+            // Group parameters
+
+            void setGroupPan(GroupId_t grp, float value);
+            void setGroupWidth(GroupId_t grp, float value);
+            void setGroupDistance(GroupId_t grp, float value);
+            void setGroupElevation(GroupId_t grp, float value);
+            void setGroupAuxSend(GroupId_t grp, float value);
+            void setGroupPanSpread(GroupId_t grp, float value);
+
+            void setGroupRelativePan(GroupId_t grp, float value);
+            void setGroupRelativeWidth(GroupId_t grp, float value);
+            void setGroupRelativeDistance(GroupId_t grp, float value);
+            void setGroupRelativeElevation(GroupId_t grp, float value);
+            void setGroupRelativeAuxSend(GroupId_t grp, float value);
+            void setGroupRelativePanSpread(GroupId_t grp, float value);
+
+
+            // Snapshots
+
+            void fireSnapshot(SnapshotId_t snp);
+            void firePreviousSnapshot();
+            void fireNextSnapshot();
+            void refireCurrentSnapshot();
+            void saveCurrentSnapshot();
+            void saveAsNewSnapshot();
+
+            // Reverbs
+
+            void loadReverbPreset(ReverbId_t reverb);
+
+            // FX
+
+            void startFx(FxId_t fx);
+            void restartFx(FxId_t fx);
+            void stopFx(FxId_t fx);
+
+            // BPM
+
+            void lockBPMToMidiClock(bool on);
+            void setBPM(float bpm);
+            void tapTempo();
+
+            // Master Fader
+
             void setMasterGain(float gain);
-
-            /**
-             * Set master fader position
-             * @param pos
-             */
             void setMasterFaderPos(float pos);
-
-            /**
-             * Mute/Unmute master
-             * @param on
-             */
             void setMasterMute(bool on);
 
-            /**
-             * Set reverb gain
-             * @param gain
-             */
+            // Reverb Fader
+
             void setReverbGain(float gain);
-
-            /**
-             * Set reverb fader position
-             * @param pos
-             */
             void setReverbFaderPos(float pos);
-
-            void setMonitoringFaderPos(float pos);
-            void setUserFaderNPos(int fader, float pos);
-
-            /**
-             * Mute/Unmute reverb
-             * @param on
-             */
             void setReverbMute(bool on);
 
-            void registerDevice(DeviceId_t device_id, const char * ip, unsigned short port);
+            // Monitor Fader
+
+            void setMonitorGain(float gain);
+            void setMonitorFaderPos(float pos);
+            void setMonitorMute(bool on);
+
+            // User Fader
+
+            void setUserFaderNGain(int fader, float gain);
+            void setUserFaderNPos(int fader, float pos);
+            void setUserFaderNMute(int fader, bool on);
+
+            // Source + Group selection
+
+            SourceId_t getLastSelectedSource(){ return lastSelectedSource; };
+
+            void selectSource(SourceId_t src);
+            void addSourceToSelection(SourceId_t src);
+            void removeSourceFromSelection(SourceId_t src);
+            void selectGroup(SourceId_t src);
+            void clearSelection();
+
+            // Headtracker
+
+            void setHeadtrackerOrientation(float yaw, float pitch, float roll);
+            void resetHeadtracker();
+            void setHeadtrackerType(HeadtrackerType_t type);
+
+            // OSC Devices
+
+            void registerDevice(DeviceId_t device_id, const char ipAddress[], unsigned short port);
             void unregisterDevice(DeviceId_t device_id);
-            void setDeviceName(DeviceId_t device_id, const char * name);
+            void setDeviceName(DeviceId_t device_id, const char name[]);
             void enableSendingToDevice(DeviceId_t device_id, bool enable);
             void enableReceivingFromDevice(DeviceId_t device_id, bool enable);
             void setDeviceCoordFormat(DeviceId_t device_id, CoordFormat_t format);
+            void setMasterGainControl(DeviceId_t deviceId, bool on);
+
+            // ping
+
+            void ping(const char ipAddress[], unsigned short port);
+
     };
 
 } // LisaDeskbridge

@@ -19,6 +19,7 @@
 #include <iostream>
 
 #include "LisaControllerProxy.h"
+#include "LisaController.h"
 
 #include "osc/OscReceivedElements.h"
 #include "osc/OscOutboundPacketStream.h"
@@ -29,177 +30,6 @@
 
 
 namespace LisaDeskbridge {
-
-    //// Messages from Controller to External Device
-
-    constexpr char kMsgRxMasterGain[]      = "/ext/master/gain";           // 0.0 - 1.0
-    constexpr char kMsgRxMasterFaderPos[]  = "/ext/master/faderpos";       // 0.0 - 1.0
-
-    constexpr char kMsgRxReverbGain[]      = "/ext/rev/master/gain";       // 0.0 - 1.0
-    constexpr char kMsgRxReverbFaderPos[]  = "/ext/rev/master/faderpos";   // 0.0 - 1.0
-
-    constexpr char kMsgRxSourcePan[]                   = "/ext/src/%u/p%n"; // 0.0 - 1.0
-    constexpr char kMsgRxSourceWidth[]                 = "/ext/src/%u/w%n"; // 0.0 - 1.0
-    constexpr char kMsgRxSourceDistance[]              = "/ext/src/%u/d%n"; // 0.0 - 1.0
-    constexpr char kMsgRxSourceElevation[]             = "/ext/src/%u/e%n"; // 0.0 - 1.0
-    constexpr char kMsgRxSourceAuxSend[]               = "/ext/src/%u/s%n"; // 0.0 - 1.0
-
-    //// Messages from External Device to Controller
-
-    // Source control flags
-
-    constexpr char kMsgSetSourceControlPan[]            = "/ext/flag/src/%u/p"; // "off", "snap", "plug", "ext", "trkr"
-    constexpr char kMsgSetSourceControlWidth[]          = "/ext/flag/src/%u/w"; // "off", "snap", "plug", "ext", "trkr"
-    constexpr char kMsgSetSourceControlDistance[]       = "/ext/flag/src/%u/d"; // "off", "snap", "plug", "ext", "trkr"
-    constexpr char kMsgSetSourceControlElevation[]      = "/ext/flag/src/%u/e"; // "off", "snap", "plug", "ext", "trkr"
-    constexpr char kMsgSetSourceControlSub[]            = "/ext/flag/src/%u/s"; // "off", "snap", "plug", "ext"
-
-    constexpr char kMsgSetAllSourcesControlPan[]            = "/ext/flag/src/*/p"; // "off", "snap", "plug", "ext", "trkr"
-    constexpr char kMsgSetAllSourcesControlWidth[]          = "/ext/flag/src/*/w"; // "off", "snap", "plug", "ext", "trkr"
-    constexpr char kMsgSetAllSourcesControlDistance[]       = "/ext/flag/src/*/d"; // "off", "snap", "plug", "ext", "trkr"
-    constexpr char kMsgSetAllSourcesControlElevation[]      = "/ext/flag/src/*/e"; // "off", "snap", "plug", "ext", "trkr"
-    constexpr char kMsgSetAllSourcesControlSub[]            = "/ext/flag/src/*/s"; // "off", "snap", "plug", "ext"
-
-    // Source parameters
-
-    constexpr char kMsgSetSourcePan[]                   = "/ext/src/%u/p"; // 0.0 - 1.0
-    constexpr char kMsgSetSourceWidth[]                 = "/ext/src/%u/w"; // 0.0 - 1.0
-    constexpr char kMsgSetSourceDistance[]              = "/ext/src/%u/d"; // 0.0 - 1.0
-    constexpr char kMsgSetSourceElevation[]             = "/ext/src/%u/e"; // 0.0 - 1.0
-    constexpr char kMsgSetSourcePanSpread[]             = "/ext/src/%u/v"; // 0.0 - 1.0
-    constexpr char kMsgSetSourceAuxSend[]               = "/ext/src/%u/s"; // 0.0 - 1.0
-
-    constexpr char kMsgSetSourceAllParameters[]                 = "/ext/src/%d/pwdes"; // ...
-
-    constexpr char kMsgSetSourceRelativePan[]                   = "/ext/src/%u/rp"; // -1.0 - 1.0
-    constexpr char kMsgSetSourceRelativeWidth[]                 = "/ext/src/%u/rw"; // -1.0 - 1.0
-    constexpr char kMsgSetSourceRelativeDistance[]              = "/ext/src/%u/rd"; // -1.0 - 1.0
-    constexpr char kMsgSetSourceRelativeElevation[]             = "/ext/src/%u/re"; // -1.0 - 1.0
-    constexpr char kMsgSetSourceRelativePanSpread[]             = "/ext/src/%u/rv"; // -1.0 - 1.0
-    constexpr char kMsgSetSourceRelativeAuxSend[]               = "/ext/src/%u/rs"; // -1.0 - 1.0
-
-    constexpr char kMsgSetSourceFxIntensity[]                   = "/ext/src/%u/fx/%u/intensity"; // 0.0 - 1.0
-    constexpr char kMsgSetSourceFxOn[]                          = "/ext/src/%u/fx/%u/active";    // 0, 1
-
-    constexpr char kMsgSetSelectedSourcesRelativePan[]          = "/ext/selsrc/rp"; // -1.0 - 1.0
-    constexpr char kMsgSetSelectedSourcesRelativeWidth[]        = "/ext/selsrc/rw"; // -1.0 - 1.0
-    constexpr char kMsgSetSelectedSourcesRelativeDistance[]     = "/ext/selsrc/rd"; // -1.0 - 1.0
-    constexpr char kMsgSetSelectedSourcesRelativeElevation[]    = "/ext/selsrc/re"; // -1.0 - 1.0
-    constexpr char kMsgSetSelectedSourcesRelativePanSpread[]    = "/ext/selsrc/rv"; // -1.0 - 1.0
-
-    // Source Solo, Snap, Delay
-
-    constexpr char kMsgSetSourceSolo[]              = "/ext/solo/src/%u";
-    constexpr char kMsgSetSourceStaticDelayValue[]  = "/ext/delayms/src/%u";
-    constexpr char kMsgSnapSourceToSpeaker[]        = "/ext/spksnap/src/%u";
-
-    // Source processing
-
-    constexpr char kMsgSetSourceOptGain[]           = "/ext/config/src/%u/distatt/gain";    // 0, 1
-    constexpr char kMsgSetSourceOptHpf[]            = "/ext/config/src/%u/distatt/hpf";     // 0, 1
-    constexpr char kMsgSetSourceOptDelayEnabled[]   = "/ext/config/src/%u/delay/enable";    // 0, 1
-    constexpr char kMsgSetSourceOptDelayMode[]      = "/ext/config/src/%u/delay/mode";      // "static", "dynamic"
-    constexpr char kMsgSetSourceOptReverbEarly[]    = "/ext/config/src/%u/reverb/early";    // 0, 1
-    constexpr char kMsgSetSourceOptReverbCluster[]  = "/ext/config/src/%u/reverb/cluster";  // 0, 1
-    constexpr char kMsgSetSourceOptReverbLate[]     = "/ext/config/src/%u/reverb/late";     // 0, 1
-    constexpr char kMsgSetSourceOptDirectSound[]    = "/ext/config/src/%u/direct";          // 0, 1
-
-    // Group parameters
-
-    constexpr char kMsgSetGroupPan[]        = "/ext/grp/%u/p"; //-1.0 - 1.0
-    constexpr char kMsgSetGroupWidth[]      = "/ext/grp/%u/w"; //-1.0 - 1.0
-    constexpr char kMsgSetGroupDistance[]   = "/ext/grp/%u/d"; //-1.0 - 1.0
-    constexpr char kMsgSetGroupElevation[]  = "/ext/grp/%u/e"; //-1.0 - 1.0
-    constexpr char kMsgSetGroupAuxLevel[]   = "/ext/grp/%u/a"; //-1.0 - 1.0
-    constexpr char kMsgSetGroupPanSpread[]  = "/ext/grp/%u/v"; //0.0 - 1.0
-
-    constexpr char kMsgSetGroupRelativePan[]        = "/ext/grp/%u/rp"; //-1.0 - 1.0
-    constexpr char kMsgSetGroupRelativeWidth[]      = "/ext/grp/%u/rw"; //-1.0 - 1.0
-    constexpr char kMsgSetGroupRelativeDistance[]   = "/ext/grp/%u/rd"; //-1.0 - 1.0
-    constexpr char kMsgSetGroupRelativeElevation[]  = "/ext/grp/%u/re"; //-1.0 - 1.0
-    constexpr char kMsgSetGroupRelativeAuxLevel[]   = "/ext/grp/%u/ra"; //-1.0 - 1.0
-
-    //?? parameter range seems wrong according to docs
-    constexpr char kMsgSetGroupRelativePanSpread[]  = "/ext/grp/%u/rv"; //0.0 - 1.0
-
-
-    // Snapshots
-
-    constexpr char kMsgFireSnapshot[]           = "/ext/snap/%u/f";
-    constexpr char kMsgFirePreviousSnapshot[]   = "/ext/snap/p/f";
-    constexpr char kMsgFireNextSnapshot[]       = "/ext/snap/n/f";
-    constexpr char kMsgRefireCurrentSnapshot[]  = "/ext/snap/c/f";
-    constexpr char kMsgSaveCurrentSnapshot[]    = "/ext/snap/c/s";
-    constexpr char kMsgSaveAsNewSnapshot[]      = "/ext/snap/sn";
-
-    // Reverbs
-
-    constexpr char kMsgLoadReverbPreset[]   = "/ext/rev/%k/l";
-
-    // FX
-
-    constexpr char kMsgStartFx[]    = "/ext/fx/%u/start";
-    constexpr char kMsgRestartFx[]  = "/ext/fx/%u/restart";
-    constexpr char kMsgStopFx[]     = "/ext/fx/%u/stop";
-
-    // BPM
-
-    constexpr char kMsgLockBpmToMidiClock[] = "/ext/tempo/sync"; // 0, 1
-    constexpr char kMsgSetBpm[]             = "/ext/tempo/bpm"; // 30.0 - 300.0
-    constexpr char kMsgBpmTap[]             = "/ext/tempo/tap";
-
-    // Master Fader
-
-    constexpr char kMsgSetMasterGain[]      = "/ext/master/gain";           // 0.0 - 1.0
-    constexpr char kMsgSetMasterFaderPos[]  = "/ext/master/faderpos";       // 0.0 - 1.0
-    constexpr char kMsgSetMasterMute[]      = "/ext/master/mute";           // 0, 1
-
-    // Reverb Fader
-
-    constexpr char kMsgSetReverbGain[]      = "/ext/rev/master/gain";       // 0.0 - 1.0
-    constexpr char kMsgSetReverbFaderPos[]  = "/ext/rev/master/faderpos";   // 0.0 - 1.0
-    constexpr char kMsgSetReverbMute[]      = "/ext/rev/master/mute";       // 0, 1
-
-    // Monitoring Fader
-
-    constexpr char kMsgSetMonitorGain[]      = "/ext/mon/gain";           // 0.0 - 1.0
-    constexpr char kMsgSetMonitorFaderPos[]  = "/ext/mon/faderpos";       // 0.0 - 1.0
-    constexpr char kMsgSetMonitorMute[]      = "/ext/mon/mute";           // 0, 1
-
-    // User Fader
-
-    constexpr char kMsgSetUserFaderNGain[]      = "/ext/fader%u/gain";           // 0.0 - 1.0
-    constexpr char kMsgSetUserFaderNPos[]       = "/ext/fader%u/faderpos";       // 0.0 - 1.0
-    constexpr char kMsgSetUserFaderNMute[]      = "/ext/fader%u/mute";           // 0, 1
-
-    // Source selection
-
-    constexpr char kMsgChangeSelectionOfSource[]    = "/ext/sel/src/%u";
-    constexpr char kMsgSetSelectionToSource[]       = "/ext/sel/set/src/%u";
-    constexpr char kMsgClearSelection[]             = "/ext/sel/set/none";
-
-    // Group selection
-
-    constexpr char kMsgSetSelectionToGroup[]        = "/ext/sel/set/grp/%u";
-
-    // Headtracker
-
-    constexpr char kMsgSetHeadtrackerOrientation[]  = "/ht/ypr"; // in radians: yaw [-3.141 - 3.141], pitch [-1.6 - 1.6], roll [-3.141 - 3.141]
-    constexpr char kMsgResetHeadtracker[]           = "/ht/reset";
-    constexpr char kMsgSetHeadtrackerType[]         = "/ht/type"; // "off", "midi", "osc"
-
-    // OSC Devices
-
-    constexpr char kMsgRegisterDevice[]             = "/ext/device/%u/register";    // "ipAddress" port
-    constexpr char kMsgDeleteDevice[]               = "/ext/device/%u/delete";
-    constexpr char kMsgSetDeviceName[]              = "/ext/device/%u/name";        // "name"
-    constexpr char kMsgEnableSendingToDevice[]      = "/ext/device/%u/send";        // 0 = off, 1 = on
-    constexpr char kMsgEnableReceivingFromDevice[]  = "/ext/device/%u/receive";     // 0 = off, 1 = on
-
-    // ping
-
-    constexpr char kMsgPing[]       = "/ext/ping"; // "ip" port
-
 
     void LisaControllerProxy::start(unsigned short listenPort, std::basic_string_view<char> & controllerAddress, unsigned short controllerPort){
         if (mIsRunning){
@@ -314,17 +144,17 @@ namespace LisaDeskbridge {
         for (int i = 0; i < count; i+=2)
         {
             enum arg_t type = va_arg(args, arg_t);
-            if (type == BOOL_T){
-                bool b = va_arg(args, int);
-                msg << b;
-            } else if (type == INT_T){
+             if (type == INT_T){
                 int i = va_arg(args, int);
                 msg << i;
             } else if (type == FLOAT_T){
                 float d = va_arg(args, double);
                 msg << d;
+            } else if (type == STRING_T) {
+                char * str = va_arg(args, char* );
+                msg << str;
             } else {
-                assert(false); // should not happen ...
+                 assert(false); // should not happen ...
             }
         }
         va_end(args);
@@ -334,114 +164,327 @@ namespace LisaDeskbridge {
         udpTransmitSocket->Send(msg.Data(), msg.Size());
     }
 
-    void LisaControllerProxy::selectSource(SourceId_t id){
-        assert(1 <= id && id <= 96);
+    // Source control flags
+
+    void LisaControllerProxy::setSourceControlFlagPan(SourceId_t src, ControlFlag_t flag){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidSourceId(src));
+        assert(isValidControlFlag(flag));
 
         char msg[64];
-        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetSelectionToSource, id);
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetSourceControlPan, src);
 
-        sendToController(msg, 0);
-
-        lastSelectedSource = id;
+        sendToController(msg,1, STRING_T, kControlFlags[flag]);
     }
-
-    void LisaControllerProxy::addSourceToSelection(SourceId_t id){
-        assert(1 <= id && id <= 96);
+    void LisaControllerProxy::setSourceControlFlagWidth(SourceId_t src, ControlFlag_t flag){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidSourceId(src));
+        assert(isValidControlFlag(flag));
 
         char msg[64];
-        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgChangeSelectionOfSource, id);
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetSourceControlWidth, src);
 
-        sendToController(msg, 1, INT_T, 1);
-
-        lastSelectedSource = 0;
+        sendToController(msg,1, STRING_T, kControlFlags[flag]);
     }
-
-    void LisaControllerProxy::removeSourceFromSelection(SourceId_t id){
-        assert(1 <= id && id <= 96);
+    void LisaControllerProxy::setSourceControlFlagDistance(SourceId_t src, ControlFlag_t flag){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidSourceId(src));
+        assert(isValidControlFlag(flag));
 
         char msg[64];
-        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgChangeSelectionOfSource, id);
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetSourceControlDistance, src);
 
-        sendToController(msg, 1, INT_T, 0);
-
-        lastSelectedSource = 0;
+        sendToController(msg,1, STRING_T, kControlFlags[flag]);
     }
-
-    void LisaControllerProxy::selectGroup(GroupId_t id){
-        assert(1 <= id && id <= 96);
+    void LisaControllerProxy::setSourceControlFlagElevation(SourceId_t src, ControlFlag_t flag){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidSourceId(src));
+        assert(isValidControlFlag(flag));
 
         char msg[64];
-        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetSelectionToGroup, id);
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetSourceControlElevation, src);
 
-        sendToController(msg, 0);
-
-        lastSelectedSource = 0;
+        sendToController(msg,1, STRING_T, kControlFlags[flag]);
     }
-
-    void LisaControllerProxy::clearSelection() {
-        sendToController(kMsgClearSelection, 0);
-
-        lastSelectedSource = 0;
-    }
-
-    void LisaControllerProxy::setSelectedSourcesRelativePan(float rpan) {
-        assert(isRunning());
-        assert(-1.0 <= rpan && rpan <= 1.0);
-
-        sendToController(kMsgSetSelectedSourcesRelativePan, 1, FLOAT_T, rpan);
-    }
-
-    void LisaControllerProxy::setSelectedSourcesRelativeWidth(float rwidth) {
-        assert(isRunning());
-        assert(-1.0 <= rwidth && rwidth <= 1.0);
-
-        sendToController(kMsgSetSelectedSourcesRelativeWidth, 1, FLOAT_T, rwidth);
-    }
-
-    void LisaControllerProxy::setSelectedSourcesRelativeDistance(float rdist) {
-        assert(isRunning());
-        assert(-1.0 <= rdist && rdist <= 1.0);
-
-        sendToController(kMsgSetSelectedSourcesRelativeDistance, 1, FLOAT_T, rdist);
-    }
-
-    void LisaControllerProxy::setSelectedSourcesRelativeElevation(float relev) {
-        assert(isRunning());
-        assert(-1.0 <= relev && relev <= 1.0);
-
-        sendToController(kMsgSetSelectedSourcesRelativeElevation, 1, FLOAT_T, relev);
-    }
-
-    void LisaControllerProxy::setSelectedSourcesRelativePanSpread(float rspread) {
-        assert(isRunning());
-        assert(-1.0 <= rspread && rspread <= 1.0);
-
-        sendToController(kMsgSetSelectedSourcesRelativePanSpread, 1, FLOAT_T, rspread);
-    }
-
-    void LisaControllerProxy::setSourceRelativeAuxSend(SourceId_t id, float rsend){
-        assert(isRunning());
-        assert(1 <= id && id <= 96);
-        assert(-1.0 <= rsend && rsend <= 1.0);
+    void LisaControllerProxy::setSourceControlFlagAuxSend(SourceId_t src, ControlFlag_t flag){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidSourceId(src));
+        assert(isValidControlFlag(flag));
 
         char msg[64];
-        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetSourceRelativeAuxSend, id);
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetSourceControlAuxSend, src);
 
-        sendToController(msg,1, FLOAT_T, rsend);
+        sendToController(msg,1, STRING_T, kControlFlags[flag]);
     }
 
-    void LisaControllerProxy::setSelectedSourceRelativeAuxSend(float rsend){
+
+    // Source Parameters
+
+    void LisaControllerProxy::setSourcePan(SourceId_t src, float value){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidSourceId(src));
+        assert(isValidAbsoluteValue(value));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetSourcePan, src);
+
+        sendToController(msg,1, FLOAT_T, value);
+    }
+    void LisaControllerProxy::setSourceWidth(SourceId_t src, float value){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidSourceId(src));
+        assert(isValidAbsoluteValue(value));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetSourceWidth, src);
+
+        sendToController(msg,1, FLOAT_T, value);
+    }
+    void LisaControllerProxy::setSourceDistance(SourceId_t src, float value){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidSourceId(src));
+        assert(isValidAbsoluteValue(value));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetSourceDistance, src);
+
+        sendToController(msg,1, FLOAT_T, value);
+    }
+    void LisaControllerProxy::setSourceElevation(SourceId_t src, float value){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidSourceId(src));
+        assert(isValidAbsoluteValue(value));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetSourceElevation, src);
+
+        sendToController(msg,1, FLOAT_T, value);
+    }
+    void LisaControllerProxy::setSourcePanSpread(SourceId_t src, float value){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidSourceId(src));
+        assert(isValidAbsoluteValue(value));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetSourcePanSpread, src);
+
+        sendToController(msg,1, FLOAT_T, value);
+    }
+    void LisaControllerProxy::setSourceAuxSend(SourceId_t src, float value){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidSourceId(src));
+        assert(isValidAbsoluteValue(value));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetSourceAuxSend, src);
+
+        sendToController(msg,1, FLOAT_T, value);
+    }
+
+    void LisaControllerProxy::setSourceAllParameters(SourceId_t src, float pan, float width, float depth, float elevation, float auxSend){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidSourceId(src));
+        assert(isValidAbsoluteValue(pan));
+        assert(isValidAbsoluteValue(width));
+        assert(isValidAbsoluteValue(depth));
+        assert(isValidAbsoluteValue(elevation));
+        assert(isValidAbsoluteValue(auxSend));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetSourceAllParameters, src);
+
+        sendToController(msg,5, FLOAT_T, pan, FLOAT_T, width, FLOAT_T, depth, FLOAT_T, elevation, FLOAT_T, auxSend);
+    }
+
+
+    void LisaControllerProxy::setSourceRelativePan(SourceId_t src, float value){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidSourceId(src));
+        assert(isValidRelativeValue(value));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetSourceRelativePan, src);
+
+        sendToController(msg,1, FLOAT_T, value);
+    }
+    void LisaControllerProxy::setSourceRelativeWidth(SourceId_t src, float value){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidSourceId(src));
+        assert(isValidRelativeValue(value));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetSourceRelativeWidth, src);
+
+        sendToController(msg,1, FLOAT_T, value);
+    }
+    void LisaControllerProxy::setSourceRelativeDistance(SourceId_t src, float value) {
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidSourceId(src));
+        assert(isValidRelativeValue(value));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetSourceRelativeDistance, src);
+
+        sendToController(msg,1, FLOAT_T, value);
+    }
+    void LisaControllerProxy::setSourceRelativeElevation(SourceId_t src, float value){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidSourceId(src));
+        assert(isValidRelativeValue(value));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetSourceRelativeElevation, src);
+
+        sendToController(msg,1, FLOAT_T, value);
+    }
+    void LisaControllerProxy::setSourceRelativePanSpread(SourceId_t src, float value){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidSourceId(src));
+        assert(isValidRelativeValue(value));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetSourceRelativePanSpread, src);
+
+        sendToController(msg,1, FLOAT_T, value);
+    }
+    void LisaControllerProxy::setSourceRelativeAuxSend(SourceId_t src, float value){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidSourceId(src));
+        assert(isValidRelativeValue(value));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetSourceRelativeAuxSend, src);
+
+        sendToController(msg,1, FLOAT_T, value);
+    }
+
+    void LisaControllerProxy::setSourceFxIntensity(SourceId_t src, FxId_t fx, float value){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidSourceId(src));
+        assert(isValidFxId(fx));
+        assert(isValidAbsoluteValue(value));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetSourceFxIntensity, src, fx);
+
+        sendToController(msg,1, FLOAT_T, value);
+    }
+    void LisaControllerProxy::setSourceFxActive(SourceId_t src, FxId_t fx, bool on){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidSourceId(src));
+        assert(isValidFxId(fx));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetSourceFxOn, src, fx);
+
+        sendToController(msg,1, INT_T, on);
+    }
+
+
+    void LisaControllerProxy::setSelectedSourceRelativeAuxSend(float value){
         if (lastSelectedSource == 0){
             return;
         }
-        setSourceRelativeAuxSend(lastSelectedSource, rsend);
+        setSourceRelativeAuxSend(lastSelectedSource, value);
     }
 
-    void LisaControllerProxy::setSourceSolo(SourceId_t id, bool on){
-        assert(1 <= id && id <= 96);
+
+    void LisaControllerProxy::setSelectedSourcesRelativePan(float value) {
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidRelativeValue(value));
+
+        sendToController(kMsgSetSelectedSourcesRelativePan, 1, FLOAT_T, value);
+    }
+
+    void LisaControllerProxy::setSelectedSourcesRelativeWidth(float value) {
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidRelativeValue(value));
+
+        sendToController(kMsgSetSelectedSourcesRelativeWidth, 1, FLOAT_T, value);
+    }
+
+    void LisaControllerProxy::setSelectedSourcesRelativeDistance(float value) {
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidRelativeValue(value));
+
+        sendToController(kMsgSetSelectedSourcesRelativeDistance, 1, FLOAT_T, value);
+    }
+
+    void LisaControllerProxy::setSelectedSourcesRelativeElevation(float value) {
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidRelativeValue(value));
+
+        sendToController(kMsgSetSelectedSourcesRelativeElevation, 1, FLOAT_T, value);
+    }
+
+    void LisaControllerProxy::setSelectedSourcesRelativePanSpread(float value) {
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidRelativeValue(value));
+
+        sendToController(kMsgSetSelectedSourcesRelativePanSpread, 1, FLOAT_T, value);
+    }
+
+
+    // Source Solo, Snap, Delay
+
+    void LisaControllerProxy::setSourceSolo(SourceId_t src, bool on){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidSourceId(src));
 
         char msg[64];
-        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetSourceSolo, id);
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetSourceSolo, src);
 
         sendToController(msg,1, INT_T, (int)on);
     }
@@ -453,11 +496,31 @@ namespace LisaDeskbridge {
         setSourceSolo(lastSelectedSource, on);
     }
 
-    void LisaControllerProxy::snapSourceToSpeaker(SourceId_t id){
-        assert(1 <= id && id <= 96);
+    void LisaControllerProxy::setSourceStaticDelayValue(SourceId_t src, float value){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidSourceId(src));
+        assert(0.0 <= value && value <= 200.0);
 
         char msg[64];
-        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSnapSourceToSpeaker, id);
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetSourceStaticDelayValue, src);
+
+        sendToController(msg,1, FLOAT_T, value);
+    }
+
+    void LisaControllerProxy::setSelectedSourceStaticDelayValue(float value) {
+        if (lastSelectedSource == 0){
+            return;
+        }
+        setSourceStaticDelayValue(lastSelectedSource, value);
+    }
+
+    void LisaControllerProxy::snapSourceToSpeaker(SourceId_t src){
+        assert(isValidSourceId(src));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSnapSourceToSpeaker, src);
 
         sendToController(msg,0);
     }
@@ -469,63 +532,681 @@ namespace LisaDeskbridge {
         snapSourceToSpeaker(lastSelectedSource);
     }
 
+
+    // Source processing
+
+    void LisaControllerProxy::setSourceOptGain(SourceId_t src, bool on){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidSourceId(src));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetSourceOptGain, src);
+
+        sendToController(msg,1, INT_T, (int)on);
+    }
+    void LisaControllerProxy::setSourceOptHpf(SourceId_t src, bool on){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidSourceId(src));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetSourceOptHpf, src);
+
+        sendToController(msg,1, INT_T, (int)on);
+    }
+    void LisaControllerProxy::setSourceOptDelayEnabled(SourceId_t src, bool on){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidSourceId(src));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetSourceOptDelayEnabled, src);
+
+        sendToController(msg,1, INT_T, (int)on);
+    }
+    void LisaControllerProxy::setSourceOptDelayMode(SourceId_t src, DelayMode_t mode){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidSourceId(src));
+        assert(isValidDelayMode(mode));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetSourceOptDelayMode, src);
+
+        sendToController(msg,1, STRING_T, kDelayModes[mode]);
+    }
+    void LisaControllerProxy::setSourceOptReverbEarly(SourceId_t src, bool on){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidSourceId(src));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetSourceOptReverbEarly, src);
+
+        sendToController(msg,1, INT_T, (int)on);
+    }
+    void LisaControllerProxy::setSourceOptReverbCluster(SourceId_t src, bool on){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidSourceId(src));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetSourceOptReverbCluster, src);
+
+        sendToController(msg,1, INT_T, (int)on);
+    }
+    void LisaControllerProxy::setSourceOptReverbLate(SourceId_t src, bool on){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidSourceId(src));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetSourceOptReverbLate, src);
+
+        sendToController(msg,1, INT_T, (int)on);
+    }
+    void LisaControllerProxy::setSourceOptDirectSound(SourceId_t src, bool on){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidSourceId(src));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetSourceOptDirectSound, src);
+
+        sendToController(msg,1, INT_T, (int)on);
+    }
+
+
+    // Group parameters
+
+    void LisaControllerProxy::setGroupPan(GroupId_t grp, float value){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidGroupId(grp));
+        assert(isValidAbsoluteValue(value));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetGroupPan, grp);
+
+        sendToController(msg,1, FLOAT_T, value);
+    }
+    void LisaControllerProxy::setGroupWidth(GroupId_t grp, float value){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidGroupId(grp));
+        assert(isValidAbsoluteValue(value));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetGroupWidth, grp);
+
+        sendToController(msg,1, FLOAT_T, value);
+    }
+    void LisaControllerProxy::setGroupDistance(GroupId_t grp, float value){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidGroupId(grp));
+        assert(isValidAbsoluteValue(value));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetGroupDistance, grp);
+
+        sendToController(msg,1, FLOAT_T, value);
+    }
+    void LisaControllerProxy::setGroupElevation(GroupId_t grp, float value){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidGroupId(grp));
+        assert(isValidAbsoluteValue(value));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetGroupElevation, grp);
+
+        sendToController(msg,1, FLOAT_T, value);
+    }
+    void LisaControllerProxy::setGroupPanSpread(GroupId_t grp, float value){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidGroupId(grp));
+        assert(isValidAbsoluteValue(value));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetGroupPanSpread, grp);
+
+        sendToController(msg,1, FLOAT_T, value);
+    }
+    void LisaControllerProxy::setGroupAuxSend(GroupId_t grp, float value){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidGroupId(grp));
+        assert(isValidAbsoluteValue(value));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetGroupAuxSend, grp);
+
+        sendToController(msg,1, FLOAT_T, value);
+    }
+
+    void LisaControllerProxy::setGroupRelativePan(GroupId_t grp, float value){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidGroupId(grp));
+        assert(isValidRelativeValue(value));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetGroupRelativePan, grp);
+
+        sendToController(msg,1, FLOAT_T, value);
+    }
+    void LisaControllerProxy::setGroupRelativeWidth(GroupId_t grp, float value){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidGroupId(grp));
+        assert(isValidRelativeValue(value));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetGroupRelativeWidth, grp);
+
+        sendToController(msg,1, FLOAT_T, value);
+    }
+    void LisaControllerProxy::setGroupRelativeDistance(GroupId_t grp, float value){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidGroupId(grp));
+        assert(isValidRelativeValue(value));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetGroupRelativeDistance, grp);
+
+        sendToController(msg,1, FLOAT_T, value);
+    }
+    void LisaControllerProxy::setGroupRelativeElevation(GroupId_t grp, float value){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidGroupId(grp));
+        assert(isValidRelativeValue(value));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetGroupRelativeElevation, grp);
+
+        sendToController(msg,1, FLOAT_T, value);
+    }
+    void LisaControllerProxy::setGroupRelativePanSpread(GroupId_t grp, float value){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidGroupId(grp));
+        assert(isValidRelativeValue(value));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetGroupRelativePanSpread, grp);
+
+        sendToController(msg,1, FLOAT_T, value);
+    }
+    void LisaControllerProxy::setGroupRelativeAuxSend(GroupId_t grp, float value){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidGroupId(grp));
+        assert(isValidRelativeValue(value));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetGroupRelativeAuxSend, grp);
+
+        sendToController(msg,1, FLOAT_T, value);
+    }
+
+    // Snapshots
+
+    void LisaControllerProxy::fireSnapshot(SnapshotId_t snapshot){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidSnapshotId(snapshot));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgFireSnapshot, snapshot);
+
+        sendToController(msg,0);
+    }
+    void LisaControllerProxy::firePreviousSnapshot() {
+        if (!isRunning()){
+            return;
+        }
+
+        sendToController(kMsgFirePreviousSnapshot, 0);
+    }
+    void LisaControllerProxy::fireNextSnapshot() {
+        if (!isRunning()){
+            return;
+        }
+
+        sendToController(kMsgFireNextSnapshot, 0);
+    }
+    void LisaControllerProxy::refireCurrentSnapshot() {
+        if (!isRunning()){
+            return;
+        }
+
+        sendToController(kMsgRefireCurrentSnapshot, 0);
+    }
+    void LisaControllerProxy::saveCurrentSnapshot() {
+        if (!isRunning()){
+            return;
+        }
+
+        sendToController(kMsgSaveCurrentSnapshot, 0);
+    }
+    void LisaControllerProxy::saveAsNewSnapshot() {
+        if (!isRunning()){
+            return;
+        }
+
+        sendToController(kMsgSaveAsNewSnapshot, 0);
+    }
+
+    // Reverbs
+
+    void LisaControllerProxy::loadReverbPreset(ReverbId_t reverb){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidReverbId(reverb));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgLoadReverbPreset, reverb);
+
+        sendToController(msg,0);
+    }
+
+    // FX
+
+    void LisaControllerProxy::startFx(FxId_t fx){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidFxId(fx));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgStartFx, fx);
+
+        sendToController(msg,0);
+    }
+    void LisaControllerProxy::restartFx(FxId_t fx){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidFxId(fx));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgRestartFx, fx);
+
+        sendToController(msg,0);
+    }
+    void LisaControllerProxy::stopFx(FxId_t fx){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidFxId(fx));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgStopFx, fx);
+
+        sendToController(msg,0);
+    }
+
+    // BPM
+
+    void LisaControllerProxy::lockBPMToMidiClock(bool on){
+        if (!isRunning()){
+            return;
+        }
+
+        sendToController(kMsgLockBpmToMidiClock, 1, INT_T, (int)on);
+    }
+    void LisaControllerProxy::setBPM(float bpm){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidBpm(bpm));
+
+        sendToController(kMsgSetBpm, 1, FLOAT_T, bpm);
+    }
+    void LisaControllerProxy::tapTempo() {
+        if (!isRunning()){
+            return;
+        }
+
+        sendToController(kMsgBpmTap, 0);
+    }
+
+    // Master Fader
+
     void LisaControllerProxy::setMasterGain(float gain) {
-        assert(isRunning());
-        assert(0.0 <= gain && gain <= 1.0);
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidGain(gain));
 
         sendToController(kMsgSetMasterGain, 1, FLOAT_T, gain);
     }
 
     void LisaControllerProxy::setMasterFaderPos(float pos) {
-        assert(isRunning());
-        assert(0.0 <= pos && pos <= 1.0);
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidFaderPos(pos));
 
         sendToController(kMsgSetMasterFaderPos, 1, FLOAT_T, pos);
     }
 
     void LisaControllerProxy::setMasterMute(bool on) {
-        assert(isRunning());
+        if (!isRunning()){
+            return;
+        }
 
         sendToController(kMsgSetMasterMute, 1, INT_T, (int)on);
     }
 
+
+    // Reverb Fader
+
     void LisaControllerProxy::setReverbGain(float gain) {
-        assert(isRunning());
-        assert(0.0 <= gain && gain <= 1.0);
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidGain(gain));
 
         sendToController(kMsgSetReverbGain, 1, FLOAT_T, gain);
     }
 
     void LisaControllerProxy::setReverbFaderPos(float pos) {
-        assert(isRunning());
-        assert(0.0 <= pos && pos <= 1.0);
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidFaderPos(pos));
 
         sendToController(kMsgSetReverbFaderPos, 1, FLOAT_T, pos);
     }
 
     void LisaControllerProxy::setReverbMute(bool on) {
-        assert(isRunning());
+        if (!isRunning()){
+            return;
+        }
 
         sendToController(kMsgSetReverbMute, 1, INT_T, (int)on);
     }
 
-    void LisaControllerProxy::setMonitoringFaderPos(float pos)  {
-        assert(isRunning());
-        assert(0.0 <= pos && pos <= 1.0);
+
+    // Monitor Fader
+
+    void LisaControllerProxy::setMonitorGain(float gain){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidGain(gain));
+
+        sendToController(kMsgSetMonitorGain, 1, FLOAT_T, gain);
+    }
+    void LisaControllerProxy::setMonitorFaderPos(float pos)  {
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidFaderPos(pos));
 
         sendToController(kMsgSetMonitorFaderPos, 1, FLOAT_T, pos);
     }
+    void LisaControllerProxy::setMonitorMute(bool on) {
+        if (!isRunning()){
+            return;
+        }
 
-    void LisaControllerProxy::setUserFaderNPos(int fader, float pos) {
-        assert(isRunning());
+        sendToController(kMsgSetMonitorMute, 1, INT_T, (int)on);
+    }
+
+    // User Fader
+
+    void LisaControllerProxy::setUserFaderNGain(int fader, float gain) {
+        if (!isRunning()){
+            return;
+        }
         assert(1 <= fader && fader <= 2);
-        assert(0.0 <= pos && pos <= 1.0);
+        assert(isValidGain(gain));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetUserFaderNGain, fader);
+
+        sendToController(msg, 1, FLOAT_T, gain);
+    }
+    void LisaControllerProxy::setUserFaderNPos(int fader, float pos) {
+        if (!isRunning()){
+            return;
+        }
+        assert(1 <= fader && fader <= 2);
+        assert(isValidFaderPos(pos));
 
         char msg[64];
         int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetUserFaderNPos, fader);
 
         sendToController(msg, 1, FLOAT_T, pos);
     }
+    void LisaControllerProxy::setUserFaderNMute(int fader, bool on) {
+        if (!isRunning()){
+            return;
+        }
+        assert(1 <= fader && fader <= 2);
 
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetUserFaderNMute, fader);
+
+        sendToController(msg, 1, INT_T, (int)on);
+    }
+
+
+    // Source + Group selection
+
+    void LisaControllerProxy::selectSource(SourceId_t src){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidSourceId(src));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetSelectionToSource, src);
+
+        sendToController(msg, 0);
+
+        lastSelectedSource = src;
+    }
+
+    void LisaControllerProxy::addSourceToSelection(SourceId_t src){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidSourceId(src));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgChangeSelectionOfSource, src);
+
+        sendToController(msg, 1, INT_T, 1);
+
+        lastSelectedSource = 0;
+    }
+
+    void LisaControllerProxy::removeSourceFromSelection(SourceId_t src){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidSourceId(src));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgChangeSelectionOfSource, src);
+
+        sendToController(msg, 1, INT_T, 0);
+
+        lastSelectedSource = 0;
+    }
+
+    void LisaControllerProxy::selectGroup(GroupId_t grp){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidGroupId(grp));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetSelectionToGroup, grp);
+
+        sendToController(msg, 0);
+
+        lastSelectedSource = 0;
+    }
+
+    void LisaControllerProxy::clearSelection() {
+        if (!isRunning()){
+            return;
+        }
+
+        sendToController(kMsgClearSelection, 0);
+
+        lastSelectedSource = 0;
+    }
+
+    // Headtracker
+
+    void LisaControllerProxy::setHeadtrackerOrientation(float yaw, float pitch, float roll){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidYaw(yaw));
+        assert(isValidPitch(pitch));
+        assert(isValidRoll(roll));
+
+        sendToController(kMsgSetHeadtrackerOrientation, 3, FLOAT_T, yaw, FLOAT_T, pitch, FLOAT_T, roll);
+    }
+    void LisaControllerProxy::resetHeadtracker(){
+        if (!isRunning()){
+            return;
+        }
+
+        sendToController(kMsgResetHeadtracker, 0);
+    }
+    void LisaControllerProxy::setHeadtrackerType(HeadtrackerType_t type){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidHeadtrackerType(type));
+
+        sendToController(kMsgSetHeadtrackerType, 1, STRING_T, kHeadtrackerTypes[type]);
+    }
+
+
+    // OSC Devices
+
+    void LisaControllerProxy::registerDevice(DeviceId_t device, const char * ipAddress, unsigned short port){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidDeviceId(device));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgRegisterDevice, device);
+
+        sendToController(msg, 2, STRING_T, ipAddress, INT_T, port);
+    }
+    void LisaControllerProxy::unregisterDevice(DeviceId_t device){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidDeviceId(device));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgDeleteDevice, device);
+
+        sendToController(msg, 0);
+    }
+    void LisaControllerProxy::setDeviceName(DeviceId_t device, const char name[]){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidDeviceId(device));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetDeviceName, device);
+
+        sendToController(msg, 1, STRING_T, name);
+    }
+    void LisaControllerProxy::enableSendingToDevice(DeviceId_t device, bool enable){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidDeviceId(device));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgEnableSendingToDevice, device);
+
+        sendToController(msg, 1, INT_T, (int)enable);
+    }
+    void LisaControllerProxy::enableReceivingFromDevice(DeviceId_t device, bool enable){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidDeviceId(device));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgEnableReceivingFromDevice, device);
+
+        sendToController(msg, 1, INT_T, (int)enable);
+    }
+    void LisaControllerProxy::setDeviceCoordFormat(DeviceId_t device, CoordFormat_t format){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidDeviceId(device));
+        assert(isValidCoordFormat(format));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetDeviceCoordFormat, device);
+
+        sendToController(msg, 1, STRING_T, kCoordFormats[format]);
+    }
+    void LisaControllerProxy::setMasterGainControl(DeviceId_t device, bool on){
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidDeviceId(device));
+
+        char msg[64];
+        int l = std::snprintf(msg, sizeof(msg), (char*)kMsgSetMasterGainControl, device);
+
+        sendToController(msg, 1, INT_T, (int)on);
+    }
+
+    // ping
+
+    void LisaControllerProxy::ping(const char ipAddress[], unsigned short port){
+        if (!isRunning()){
+            return;
+        }
+
+        sendToController(kMsgPing, 2, STRING_T, ipAddress, INT_T, port);
+    }
 
 } // LisaDeskbridge

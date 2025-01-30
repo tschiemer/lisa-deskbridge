@@ -292,7 +292,7 @@ namespace LisaDeskbridge {
                 }
                 // monitoring fader
                 else if (cc == 2){
-                    sq6->lisaControllerProxy.setMonitoringFaderPos((float)value / 127.0);
+                    sq6->lisaControllerProxy.setMonitorFaderPos((float)value / 127.0);
                 }
                 // user fader 1
                 else if (cc == 3){

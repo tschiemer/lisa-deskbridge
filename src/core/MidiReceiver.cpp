@@ -16,13 +16,13 @@
         * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "Midi.h"
+#include "MidiReceiver.h"
 
 #include <iostream>
 
 namespace LisaDeskbridge {
 
-    void MidiReceiverDelegate::receivedMessage(const libremidi::message& message){
+    void MidiReceiver::Delegate::receivedMessage(const libremidi::message& message){
 
 //        std::cout << "MESSAGE type(" << (int)message.get_message_type() << ") channel(" << message.get_channel() << ")" << std::endl;
 
@@ -60,4 +60,19 @@ namespace LisaDeskbridge {
                 break;
         }
     }
+
+    MidiReceiver::MidiReceiver(Delegate &delegate){
+        this->midiReceiverDelegate = &delegate;
+    }
+
+    MidiReceiver_Single_Impl::MidiReceiver_Single_Impl(Delegate &delegate) :
+            MidiReceiver(delegate),
+            midiIn({
+                .on_message= [&](const libremidi::message& message) {
+                    midiReceiverDelegate->receivedMessage(message);
+                }
+            }){
+        // do nothing
+    }
+
 }

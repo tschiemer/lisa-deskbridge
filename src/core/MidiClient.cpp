@@ -18,14 +18,14 @@
 
 #include "MidiClient.h"
 
+#include <iostream>
+#include "log.h"
+
 namespace LisaDeskbridge {
 
-     MidiClient::MidiClient(MidiReceiverDelegate &delegate) : midiIn({
-                   .on_message= [&](const libremidi::message& message) {
-                       midiReceiverDelegate->receivedMessage(message);
-                   }
-           }){
-         midiReceiverDelegate = &delegate;
+     MidiClient::MidiClient(MidiReceiver::Delegate &delegate) :
+             MidiReceiver_Single_Impl(delegate){
+         // do nothing
     }
 
 
@@ -34,8 +34,8 @@ namespace LisaDeskbridge {
         mInPortName = inPortName;
         mOutPortName = outPortName;
 
-        std::cout << "Scanning for IN port = '" << mInPortName << "'." << std::endl;
-        std::cout << "Scanning for OUT port = '" << mOutPortName << "'." << std::endl;
+        log(LogLevelInfo, "Scanning for IN port = '%s'", mInPortName);
+        log(LogLevelInfo, "Scanning for OUT port = '%s'", mOutPortName);
 
         observer = new libremidi::observer ({
                 .track_hardware = true,
@@ -43,14 +43,14 @@ namespace LisaDeskbridge {
                 .input_added = [&](const libremidi::input_port &port){
 //                     std::cout << "Added IN port = " << port.port_name << std::endl;
 
-                    if (port.port_name == mInPortName){
-                        std::cout << "Found MIDI IN port '" << mInPortName << "'. Opening.." << std:: endl;
+                    if (mInPortName.length() > 0 && port.port_name == mInPortName){
+                        log(LogLevelInfo, "Found MIDI IN port '%s'. Opening..", mInPortName );
                         if (midiIn.is_port_open()){
                             midiIn.close_port();
                         }
                         stdx::error e = midiIn.open_port(port, mInPortName);
                         if (e.is_set()){
-                            std::cerr << "Error opening midi IN port: " << e.message().data() << std::endl;
+                            error("opening midi IN port: %s", e.message().data() );
                         }
                     }
                 },
@@ -58,22 +58,22 @@ namespace LisaDeskbridge {
                     // Well, on macOS port_name does not contain any info, so this callback here is meaningless
 //                    std::cerr << "Removed IN port = " << port.port_name << std::endl;
 
-                    if (port.port_name == mInPortName){
+                    if (mInPortName.length() > 0 && port.port_name == mInPortName){
                         midiIn.close_port();
-                        std::cerr << "Lost MIDI IN port '" << mInPortName << "'. Waiting for reconnection..." << std:: endl;
+                        log(LogLevelInfo, "Lost MIDI IN port '%s'. Waiting for reconnection..", mInPortName );
                     }
                 },
                 .output_added = [&](const libremidi::output_port &port){
 //                    std::cerr << "Added OUT port = " << port.port_name << std::endl;
 
-                    if (port.port_name == mOutPortName){
-                        std::cout << "Found MIDI OUT port '" << mOutPortName << "'. Opening.." << std:: endl;
+                    if (mOutPortName.length() > 0 && port.port_name == mOutPortName){
+                        log(LogLevelInfo, "Found MIDI OUT port '%s'. Opening..", mOutPortName );
                         if (midiOut.is_port_open()){
                             midiOut.close_port();
                         }
                         stdx::error e = midiOut.open_port(port, mOutPortName);
                         if (e.is_set()){
-                            std::cerr << "Error opening midi OUT port: " << e.message().data() << std::endl;
+                            error("opening midi OUT port: %s", e.message().data() );
                         }
                     }
                 },
@@ -81,9 +81,9 @@ namespace LisaDeskbridge {
                     // Well, on macOS port_name does not contain any info, so this callback here is meaningless
 //                    std::cerr << "Removed OUT port = " << port.port_name << std::endl;
 
-                    if (port.port_name == mOutPortName){
+                    if (mOutPortName.length() > 0 && port.port_name == mOutPortName){
                         midiOut.close_port();
-                        std::cout << "Lost MIDI OUT port '" << mOutPortName << "'. Waiting for reconnection..." << std:: endl;
+                        log(LogLevelInfo, "Lost MIDI OUT port '%s'. Waiting for reconnection..", mOutPortName );
                     }
                 }
         });
@@ -91,93 +91,10 @@ namespace LisaDeskbridge {
     }
 
     void MidiClient::stop(){
+        delete observer;
+
         midiIn.close_port();
         midiOut.close_port();
-
-        delete observer;
-    }
-
-    void MidiClient::sendNoteOn(int channel, int note, int velocity) {
-        assert(0 <= channel && channel <= 15);
-        assert(0 <= note && note <= 127);
-        assert(0 <= velocity && velocity <= 127);
-
-        if (!midiOut.is_port_open()){
-            return;
-        }
-
-        midiOut.send_message( ((int)libremidi::message_type::NOTE_ON | channel), note, velocity);
-    }
-
-    void MidiClient::sendNoteOff(int channel, int note, int velocity) {
-        assert(0 <= channel && channel <= 15);
-        assert(0 <= note && note <= 127);
-        assert(0 <= velocity && velocity <= 127);
-
-        if (!midiOut.is_port_open()){
-            return;
-        }
-
-        midiOut.send_message( ((int)libremidi::message_type::NOTE_OFF | channel), note, velocity);
-    }
-
-    void MidiClient::sendControlChange(int channel, int cc, int value){
-        assert(0 <= channel && channel <= 15);
-        assert(0 <= cc && cc <= 127);
-        assert(0 <= value && value <= 127);
-
-        if (!midiOut.is_port_open()){
-            return;
-        }
-
-        midiOut.send_message( ((int)libremidi::message_type::CONTROL_CHANGE | channel), cc, value);
-    }
-    void MidiClient::sendAftertouch(int channel, int note, int pressure) {
-        assert(0 <= channel && channel <= 15);
-        assert(0 <= note && note <= 127);
-        assert(0 <= pressure && pressure <= 127);
-
-        if (!midiOut.is_port_open()){
-            return;
-        }
-
-        midiOut.send_message( ((int)libremidi::message_type::POLY_PRESSURE | channel), note, pressure);
-    }
-
-    void MidiClient::sendProgramChange(int channel, int program) {
-        assert(0 <= channel && channel <= 15);
-        assert(0 <= program && program <= 127);
-
-        if (!midiOut.is_port_open()){
-            return;
-        }
-
-        midiOut.send_message( ((int)libremidi::message_type::PROGRAM_CHANGE | channel), program);
-    }
-
-    void MidiClient::sendChannelPressure(int channel, int pressure) {
-        assert(0 <= channel && channel <= 15);
-        assert(0 <= pressure && pressure <= 127);
-
-        if (!midiOut.is_port_open()){
-            return;
-        }
-        midiOut.send_message( ((int)libremidi::message_type::AFTERTOUCH | channel), pressure);
-    }
-
-    void MidiClient::sendPitchBend(int channel, int bend) {
-        assert(0 <= channel && channel <= 15);
-        assert(0 <= bend && bend <= 16384);
-
-        if (!midiOut.is_port_open()){
-            return;
-        }
-
-        // least significant bytes first...
-        int b1 = bend & 0b01111111;
-        int b2 = (bend >> 7) & 0b01111111;
-
-        midiOut.send_message( ((int)libremidi::message_type::POLY_PRESSURE | channel), b1, b2);
     }
 
 }

@@ -21,6 +21,8 @@
 #include "LisaControllerProxy.h"
 #include "LisaController.h"
 
+#include "log.h"
+
 #include "osc/OscReceivedElements.h"
 #include "osc/OscOutboundPacketStream.h"
 
@@ -36,7 +38,7 @@ namespace LisaDeskbridge {
             return;
         }
 
-        std::cout << "Listening for L-ISA Controller messages on port " << listenPort << std::endl;
+        log(LogLevelInfo, "Listening for L-ISA Controller messages on port %u", listenPort);
 
         udpListeningReceiveSocket = new UdpListeningReceiveSocket(
                 IpEndpointName( IpEndpointName::ANY_ADDRESS, listenPort),
@@ -47,7 +49,7 @@ namespace LisaDeskbridge {
             socket->Run();
         }, udpListeningReceiveSocket);
 
-        std::cout << "Sending to L-ISA Controller on host " << controllerAddress << " on port " << controllerPort << std::endl;
+        log(LogLevelInfo, "Sending to L-ISA Controller on host %s on port %u",controllerAddress, controllerPort);
 
         udpTransmitSocket = new UdpTransmitSocket( IpEndpointName( controllerAddress.data(), controllerPort ) );
 
@@ -77,6 +79,8 @@ namespace LisaDeskbridge {
         try{
             // example of parsing single messages. osc::OsckPacketListener
             // handles the bundle traversal.
+
+            log(LogLevelDebug, "LisaControllerProxy received: %s", m.AddressPattern());
 
             osc::ReceivedMessage::const_iterator args = m.ArgumentsBegin();
 
@@ -121,13 +125,12 @@ namespace LisaDeskbridge {
             }
             else {
 
-                std::cout << "Received unknown packet: " << m.AddressPattern() << std::endl;
+                log(LogLevelDebug, "LisaControllerProxy: Received unknown packet: %s",m.AddressPattern() );
             }
         } catch( osc::Exception& e ){
             // any parsing errors such as unexpected argument types, or
             // missing arguments get thrown as exceptions.
-            std::cerr << "error while parsing message: "
-                      << m.AddressPattern() << ": " << e.what() << "\n";
+            error("LisaControllerProxy: parsing message for address '%s': %s", m.AddressPattern(), e.what());
         }
     }
 
@@ -162,6 +165,8 @@ namespace LisaDeskbridge {
         msg << osc::EndMessage;
 
         udpTransmitSocket->Send(msg.Data(), msg.Size());
+
+        log(LogLevelDebug, "sendToController: %s", address);
     }
 
     // Source control flags
@@ -227,6 +232,28 @@ namespace LisaDeskbridge {
         sendToController(msg,1, STRING_T, kControlFlags[flag]);
     }
 
+    void LisaControllerProxy::setAllSourcesControlFlags(ControlFlag_t flag) {
+        if (!isRunning()){
+            return;
+        }
+        assert(isValidControlFlag(flag));
+
+        const char * flagStr = kControlFlags[flag];
+
+        sendToController(kMsgSetAllSourcesControlPan,1, STRING_T, flagStr);
+        sendToController(kMsgSetAllSourcesControlWidth,1, STRING_T, flagStr);
+        sendToController(kMsgSetAllSourcesControlDistance,1, STRING_T, flagStr);
+        sendToController(kMsgSetAllSourcesControlElevation,1, STRING_T, flagStr);
+        sendToController(kMsgSetAllSourcesControlAuxSend,1, STRING_T, flagStr);
+    }
+
+    void LisaControllerProxy::setAllSourcesControlBySnapshots() {
+        setAllSourcesControlFlags(ControlFlagSnap);
+    }
+
+    void LisaControllerProxy::setAllSourcesControlByOSC() {
+        setAllSourcesControlFlags(ControlFlagExt);
+    }
 
     // Source Parameters
 

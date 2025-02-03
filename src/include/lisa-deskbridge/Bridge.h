@@ -26,7 +26,7 @@
 
 namespace LisaDeskbridge {
 
-    class Bridge : public LisaDeskbridge::LisaControllerProxy::IDelegate {
+    class Bridge : public LisaDeskbridge::LisaControllerProxy::Delegate {
 
         public:
 

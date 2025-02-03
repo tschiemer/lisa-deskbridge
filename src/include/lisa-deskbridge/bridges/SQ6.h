@@ -44,7 +44,7 @@ namespace LisaDeskbridge {
 
                 enum ButtonState {ButtonState_Released, ButtonState_Pressed};
 
-                class MixingStationDelegate : public LisaDeskbridge::MidiReceiverDelegate {
+                class MixingStationDelegate : public LisaDeskbridge::MidiReceiver::Delegate {
 
                     protected:
 
@@ -52,8 +52,8 @@ namespace LisaDeskbridge {
 
                     public:
 
-                        MixingStationDelegate(SQ6 * sq){
-                            sq6 = sq;
+                        MixingStationDelegate(SQ6 &sq){
+                            sq6 = &sq;
                         }
 
                         void receivedNoteOn(int channel, int note, int velocity);
@@ -61,7 +61,7 @@ namespace LisaDeskbridge {
 //                        void receivedControlChange(int channel, int cc, int value);
                 };
 
-                class SQMidiControlDelegate : public LisaDeskbridge::MidiReceiverDelegate {
+                class SQMidiControlDelegate : public LisaDeskbridge::MidiReceiver::Delegate {
 
                     protected:
 
@@ -69,13 +69,14 @@ namespace LisaDeskbridge {
 
                     public:
 
-                        SQMidiControlDelegate(SQ6 * sq){
-                            sq6 = sq;
+                        SQMidiControlDelegate(SQ6 &sq){
+                            sq6 = &sq;
                         }
 
                         void receivedNoteOn(int channel, int note, int velocity);
                         void receivedNoteOff(int channel, int note, int velocity);
                         void receivedControlChange(int channel, int cc, int value);
+                        void receivedProgramChange(int channel, int program);
                 };
 
 
@@ -114,7 +115,7 @@ namespace LisaDeskbridge {
                 enum ButtonState softBtn4 = ButtonState_Released;
 
 
-        protected: // LisaDeskbridge::LisaControllerProxy::IDelegate
+        protected: // LisaDeskbridge::LisaControllerProxy::Delegate
 
 //                void receivedMasterGain(float gain);
                 void receivedMasterFaderPos(float pos);

@@ -17,8 +17,12 @@
 */
 
 #include <getopt.h>
+#include <iostream>
+
+#include "log.h"
 
 #include "Bridge.h"
+#include "bridges/Generic.h"
 #include "bridges/SQ6.h"
 
 static char * argv0 = nullptr;
@@ -53,15 +57,17 @@ static void help(){
         "\t -v                      Verbose output\n"
         "\t -p,--local-port         Local port to receive L-ISA Controller OSC messages (default: %hu)\n"
         "\t --lisa-host             L-ISA Controller host/ip (default: %s)\n"
-        "\t --lisa-port             L-ISA Controller port (default: %hu\n"
-        "\t -b,--bridge-opt         Pass (multiple) options to bridge using form 'key=value'\n"
+        "\t --lisa-port             L-ISA Controller port (default: %hu)\n"
+        "\t -o,--bridge-opt         Pass (multiple) options to bridge using form 'key=value'\n"
         "\nBridge options:\n"
+        "%s\n"
         "%s\n"
         "\nExamples:\n"
         "%s SQ6 #to use SQ6 bridge with default options\n"
         "%s -p 9000 --lisa-port 8880 --lisa-host 127.0.0.1 -o \"midiin=MIDI Control 1\" -o \"midiout=MIDI Control 1\" SQ6 # to use SQ6 bridge with custom options (which happen to be the default ones)\n"
         , argv0,
         LisaDeskbridge::kRemotePortDefault, LisaDeskbridge::kLisaControllerHostDefault.data(), LisaDeskbridge::kLisaControllerPortDefault,
+        LisaDeskbridge::Bridges::Generic::helpOpts,
         LisaDeskbridge::Bridges::SQ6::helpOpts,
         argv0, argv0 // examples
     );
@@ -114,7 +120,8 @@ int main(int argc, char * argv[]) {
                 break;
 
             case 'v':
-                opts.verbose = true;
+//                opts.verbose = true;
+                LisaDeskbridge::setLogLevel(LisaDeskbridge::LogLevelDebug);
                 break;
 
             case '?':
@@ -143,10 +150,10 @@ int main(int argc, char * argv[]) {
 
     bridge = LisaDeskbridge::Bridge::factory(opts.bridgeName, opts.bridgeOpts);
     if (bridge == nullptr){
-        std::cout << "Invalid bridgeName: " << opts.bridgeName << std::endl;
+        std::cout << "Invalid bridge: " << opts.bridgeName << std::endl;
         return EXIT_FAILURE;
     }
-    std::cout << "Using bridge: " << opts.bridgeName << std::endl;
+    LisaDeskbridge::log(LisaDeskbridge::LogLevelInfo, "Using bridge: %s", opts.bridgeName);
 
     bridge->setLisaControllerOpts(opts.localPort, opts.lisaHost, opts.lisaPort);
 

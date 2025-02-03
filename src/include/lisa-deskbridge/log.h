@@ -16,34 +16,23 @@
         * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef LISA_DESKBRIDGE_MIDICLIENT_H
-#define LISA_DESKBRIDGE_MIDICLIENT_H
+#ifndef LISA_DESKBRIDGE_LOG_H
+#define LISA_DESKBRIDGE_LOG_H
 
-#include "MidiReceiver.h"
-#include "MidiSender.h"
-
-#include <libremidi/libremidi.hpp>
+#include <cstdio>
 
 namespace LisaDeskbridge {
 
-    class MidiClient : public MidiSender_Single_Impl, public MidiReceiver_Single_Impl {
+    enum LogLevel_t {LogLevelInfo, LogLevelDebug};
 
-        protected:
+    void setLogLevel(LogLevel_t level);
 
-            std::basic_string_view<char> mInPortName;
-            std::basic_string_view<char> mOutPortName;
+    void setLogFile(FILE * file);
 
-            libremidi::observer * observer = nullptr;
+    void log(LogLevel_t level, const char * msg, ...);
 
-        public:
-
-            MidiClient(MidiReceiver::Delegate &delegate) ;
-
-            void start(std::basic_string_view<char> inPortName, std::basic_string_view<char> outPortName);
-            void stop();
-
-    };
-
+    void error(const char * msg, ...);
 }
 
-#endif //LISA_DESKBRIDGE_MIDICLIENT_H
+
+#endif //LISA_DESKBRIDGE_LOG_H

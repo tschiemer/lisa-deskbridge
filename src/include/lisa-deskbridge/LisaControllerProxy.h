@@ -33,7 +33,7 @@ namespace LisaDeskbridge {
 
         public:
 
-            class IDelegate {
+            class Delegate {
                 public:
                     virtual void receivedSourcePan(SourceId_t src, float pan){}
                     virtual void receivedSourceWidth(SourceId_t src, float width){}
@@ -53,7 +53,7 @@ namespace LisaDeskbridge {
 
             enum arg_t {INT_T, FLOAT_T, STRING_T};
 
-            IDelegate * iDelegate = nullptr;
+            Delegate * iDelegate = nullptr;
             UdpListeningReceiveSocket * udpListeningReceiveSocket = nullptr;
             UdpTransmitSocket * udpTransmitSocket = nullptr;
 
@@ -67,7 +67,7 @@ namespace LisaDeskbridge {
 
         public:
 
-            LisaControllerProxy(IDelegate * delegate){
+            LisaControllerProxy(Delegate * delegate){
                 iDelegate = delegate;
             }
 
@@ -88,6 +88,10 @@ namespace LisaDeskbridge {
             void setSourceControlFlagElevation(SourceId_t src, ControlFlag_t flag);
             void setSourceControlFlagAuxSend(SourceId_t src, ControlFlag_t flag);
 
+            void setAllSourcesControlFlags(ControlFlag_t flag);
+
+            void setAllSourcesControlBySnapshots();
+            void setAllSourcesControlByOSC();
 
             // Source parameters
 

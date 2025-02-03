@@ -18,14 +18,18 @@
 
 #include "bridges/SQ6.h"
 
+#include <iostream>
+
+#include "log.h"
+
 namespace LisaDeskbridge {
     namespace Bridges {
 
 
         SQ6::SQ6(BridgeOpts &opts) :
             Bridge(opts),
-            mixingStationDelegate(this), mixingStationVirtualMidiDevice(mixingStationDelegate),
-            sqMidiControlDelegate(this), sqMidiControlClient(sqMidiControlDelegate){
+            mixingStationDelegate(*this), mixingStationVirtualMidiDevice(mixingStationDelegate),
+            sqMidiControlDelegate(*this), sqMidiControlClient(sqMidiControlDelegate){
 
             if (opts.contains("midiin")){
                 midiInPortName = opts["midiin"];
@@ -36,7 +40,8 @@ namespace LisaDeskbridge {
         }
 
         bool SQ6::startMixingStationVirtualMidiDevice(){
-            std::cout << "Starting virtual MIDI Device '" << VirtualMidiDevice::kDefaultPortName << "' for channel selection .." << std::endl;
+            log(LogLevelInfo, "Starting virtual MIDI Device '%s' for channel selection ..",VirtualMidiDevice::kDefaultPortName );
+
             try {
                 mixingStationVirtualMidiDevice.start();
             } catch (const std::exception & e){
@@ -48,12 +53,14 @@ namespace LisaDeskbridge {
         }
 
         void SQ6::stopMixingStationVirtualMidiDevice(){
-            std::cout << "Stopping virtual MIDI Device for channel selection .." << std::endl;
+            log(LogLevelInfo, "Stopping virtual MIDI Device for channel selection ..");
+
             mixingStationVirtualMidiDevice.stop();
         }
 
         bool SQ6::startSQMidiControlClient() {
-            std::cout << "Starting MIDI Client.." << std::endl;
+            log(LogLevelInfo, "Starting MIDI Client..");
+
             try {
                 sqMidiControlClient.start(midiInPortName, midiOutPortName);
             } catch (const std::exception & e){
@@ -65,7 +72,8 @@ namespace LisaDeskbridge {
         }
 
         void SQ6::stopSQMidiControlClient() {
-            std::cout << "Stopping MIDI Client.."<< std::endl;
+            log(LogLevelInfo, "Stopping MIDI Client..");
+
             sqMidiControlClient.stop();
         }
 
@@ -122,7 +130,7 @@ namespace LisaDeskbridge {
                 return;
             }
 
-//            printf("MIX NOTE ON ch(%d) note(%d) velocity(%d)\n", channel, note, velocity);
+            log(LogLevelDebug,"MIX NOTE ON ch(%d) note(%d) velocity(%d)", channel, note, velocity);
 
             // select source (channel == 1 (valid source range)
             if (channel == 1 && 1 <= note && note <= 96){
@@ -188,7 +196,7 @@ namespace LisaDeskbridge {
                 return;
             }
 
-//            printf("SQ NOTE ON ch(%d) note(%d) velocity(%d)\n", channel, note, velocity);
+            log(LogLevelDebug, "SQ NOTE ON ch(%d) note(%d) velocity(%d)", channel, note, velocity);
 
             if (channel == 1 && note == 1){
                 sq6->softBtn1 = ButtonState_Pressed;
@@ -208,9 +216,29 @@ namespace LisaDeskbridge {
             else if (channel == 1 && note == 4){
                 sq6->softBtn4 = ButtonState_Pressed;
             }
-            else if (channel == 2 && 1 <= note && note <= 96){
+            else if (channel == 2 && isValidGroupId(note)){
                 sq6->lisaControllerProxy.selectGroup(note);
             }
+            else if (channel == 3 && isValidSnapshotId(note)){
+                sq6->lisaControllerProxy.fireSnapshot(note);
+            }
+            else if (channel == 4){
+                if (note == 1){
+                    sq6->lisaControllerProxy.setAllSourcesControlByOSC();
+                }
+                else if (note == 2){
+                    sq6->lisaControllerProxy.setAllSourcesControlBySnapshots();
+                }
+                else if (note == 11){
+                    sq6->lisaControllerProxy.firePreviousSnapshot();
+                }
+                else if (note == 12){
+                    sq6->lisaControllerProxy.refireCurrentSnapshot();
+                }
+                else if (note == 13){
+                    sq6->lisaControllerProxy.fireNextSnapshot();
+                }
+            } // channel == 3
 
         }
         void SQ6::SQMidiControlDelegate::receivedNoteOff(int channel, int note, int velocity){
@@ -218,7 +246,8 @@ namespace LisaDeskbridge {
             if (sq6->state != State_Started){
                 return;
             }
-//            printf("SQ NOTE OFF ch(%d) note(%d) velocity(%d)\n", channel, note, velocity);
+
+            log(LogLevelDebug, "SQ NOTE OFF ch(%d) note(%d) velocity(%d)", channel, note, velocity);
 
             if (channel == 1 && note == 1){
                 sq6->softBtn1 = ButtonState_Released;
@@ -238,7 +267,8 @@ namespace LisaDeskbridge {
             if (sq6->state != State_Started){
                 return;
             }
-//            printf("SQ CC ch(%d) cc(%d) value(%d)\n", channel, cc, value);
+
+            log(LogLevelDebug,"SQ CC ch(%d) cc(%d) value(%d)", channel, cc, value);
 
             if (channel == 1){
                 if (1 <= cc && cc <= 8){
@@ -282,27 +312,36 @@ namespace LisaDeskbridge {
                 }
             } // channel == 1
             else if (channel == 2){
-                // master fader
                 if (cc == 0){
                     sq6->lisaControllerProxy.setMasterFaderPos((float)value / 127.0);
                 }
-                // reverb fader
                 else if (cc == 1){
                     sq6->lisaControllerProxy.setReverbFaderPos((float)value / 127.0);
                 }
-                // monitoring fader
                 else if (cc == 2){
                     sq6->lisaControllerProxy.setMonitorFaderPos((float)value / 127.0);
                 }
-                // user fader 1
                 else if (cc == 3){
                     sq6->lisaControllerProxy.setUserFaderNPos(1,(float)value / 127.0);
                 }
-                // user fader 2
                 else if (cc == 4){
                     sq6->lisaControllerProxy.setUserFaderNPos(2,(float)value / 127.0);
                 }
             } // channel == 2
+        }
+        void SQ6::SQMidiControlDelegate::receivedProgramChange(int channel, int program){
+            // only process if completely started
+            if (sq6->state != State_Started){
+                return;
+            }
+
+            log(LogLevelDebug,"SQ PCH ch(%d) p(%d)", channel, program);
+
+            if (channel == 1){
+                if (isValidSnapshotId(program)){
+                    sq6->lisaControllerProxy.fireSnapshot(program);
+                }
+            }
         }
 
         void SQ6::receivedMasterFaderPos(float pos){

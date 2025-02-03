@@ -46,7 +46,7 @@ namespace LisaDeskbridge {
     }
 
     inline bool isValidFxId(FxId_t id){
-        return (1 <= id);
+        return (1 <= id && id <= 32);
     }
 
     inline bool isValidSnapshotId(SnapshotId_t id){
@@ -104,11 +104,11 @@ namespace LisaDeskbridge {
         return (flag == ControlFlagOff || flag == ControlFlagSnap || flag == ControlFlagPlug || flag == ControlFlagExt || flag == ControlFlagTrKr);
     }
 
-//    constexpr char kMsgSetAllSourcesControlPan[]            = "/ext/flag/src/*/p"; // "off", "snap", "plug", "ext", "trkr"
-//    constexpr char kMsgSetAllSourcesControlWidth[]          = "/ext/flag/src/*/w"; // "off", "snap", "plug", "ext", "trkr"
-//    constexpr char kMsgSetAllSourcesControlDistance[]       = "/ext/flag/src/*/d"; // "off", "snap", "plug", "ext", "trkr"
-//    constexpr char kMsgSetAllSourcesControlElevation[]      = "/ext/flag/src/*/e"; // "off", "snap", "plug", "ext", "trkr"
-//    constexpr char kMsgSetAllSourcesControlSub[]            = "/ext/flag/src/*/s"; // "off", "snap", "plug", "ext"
+    constexpr char kMsgSetAllSourcesControlPan[]            = "/ext/flag/src/*/p"; // "off", "snap", "plug", "ext", "trkr"
+    constexpr char kMsgSetAllSourcesControlWidth[]          = "/ext/flag/src/*/w"; // "off", "snap", "plug", "ext", "trkr"
+    constexpr char kMsgSetAllSourcesControlDistance[]       = "/ext/flag/src/*/d"; // "off", "snap", "plug", "ext", "trkr"
+    constexpr char kMsgSetAllSourcesControlElevation[]      = "/ext/flag/src/*/e"; // "off", "snap", "plug", "ext", "trkr"
+    constexpr char kMsgSetAllSourcesControlAuxSend[]            = "/ext/flag/src/*/s"; // "off", "snap", "plug", "ext"
 
     // Source parameters
 

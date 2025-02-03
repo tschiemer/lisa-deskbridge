@@ -16,33 +16,17 @@
         * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef LISA_DESKBRIDGE_MIDI_H
-#define LISA_DESKBRIDGE_MIDI_H
+#ifndef LISA_DESKBRIDGE_MIDISENDER_H
+#define LISA_DESKBRIDGE_MIDISENDER_H
 
 #include <libremidi/libremidi.hpp>
 
 namespace LisaDeskbridge {
 
-    class MidiReceiverDelegate {
-
-            friend class MidiClient;
-            friend class VirtualMidiDevice;
-
-        protected:
-            void receivedMessage(const libremidi::message& message) ;
-
-        public:
-            virtual void receivedNoteOn(int channel, int note, int velocity){}
-            virtual void receivedNoteOff(int channel, int note, int velocity){}
-            virtual void receivedControlChange(int channel, int cc, int value){}
-            virtual void receivedPolyPressure(int channel, int note, int pressure){}
-            virtual void receivedProgramChange(int channel, int program){}
-            virtual void receivedAftertouch(int channel, int pressure){}
-            virtual void receivedPitchBend(int channel, int bend){}
-    };
-
     class MidiSender {
+
         public:
+
             virtual void sendNoteOn(int channel, int note, int velocity){};
             virtual void sendNoteOff(int channel, int note, int velocity){};
             virtual void sendControlChange(int channel, int cc, int value){};
@@ -50,9 +34,28 @@ namespace LisaDeskbridge {
             virtual void sendProgramChange(int channel, int program){};
             virtual void sendChannelPressure(int channel, int pressure){};
             virtual void sendPitchBend(int channel, int bend){};
+
+    };
+
+    class MidiSender_Single_Impl : public MidiSender {
+
+        protected:
+
+            libremidi::midi_out midiOut;
+
+        public:
+
+            void sendNoteOn(int channel, int note, int velocity);
+            void sendNoteOff(int channel, int note, int velocity);
+            void sendControlChange(int channel, int cc, int value);
+            void sendAftertouch(int channel, int note, int pressure);
+            void sendProgramChange(int channel, int program);
+            void sendChannelPressure(int channel, int pressure);
+            void sendPitchBend(int channel, int bend);
+
     };
 
 }
 
 
-#endif //LISA_DESKBRIDGE_MIDI_H
+#endif //LISA_DESKBRIDGE_MIDISENDER_H

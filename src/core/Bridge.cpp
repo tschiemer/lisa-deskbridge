@@ -22,6 +22,8 @@
 #include <csignal>
 
 #include "bridges/SQ6.h"
+#include "bridges/Generic.h"
+#include "log.h"
 
 #if defined(__APPLE__)
 #include <CoreFoundation/CoreFoundation.h>
@@ -45,8 +47,16 @@ namespace LisaDeskbridge {
     Bridge *Bridge::factory(std::basic_string_view<char> &name, BridgeOpts &opts) {
 
         Bridge * bridge = nullptr;
-        if (name.compare(Bridges::SQ6::kName) == 0){
-            bridge = new Bridges::SQ6(opts);
+        try {
+            if (name.compare(Bridges::Generic::kName) == 0){
+                bridge = new Bridges::Generic(opts);
+            }
+            else if (name.compare(Bridges::SQ6::kName) == 0){
+                bridge = new Bridges::SQ6(opts);
+            }
+
+        } catch (std::exception &e){
+            log(LogLevelDebug, "Exception when creating bridge: %s", e.what());
         }
         return bridge;
     }
@@ -62,7 +72,7 @@ namespace LisaDeskbridge {
 
     void Bridge::runloop(){
 
-        std::cout << "Starting run loop.." << std::endl;
+        log(LogLevelInfo, "Starting run loop..");
 
 #if defined(__APPLE__)
 // On macOS, observation can *only* be done in the main thread
@@ -101,7 +111,8 @@ namespace LisaDeskbridge {
     }
 
     bool Bridge::startLisaControllerProxy(){
-        std::cout << "Starting L-ISA Controller Proxy.." << std::endl;
+        log(LogLevelInfo,  "Starting L-ISA Controller Proxy.." );
+
         try {
             lisaControllerProxy.start(localPort, lisaControllerHost, lisaControllerPort);
         } catch (const std::exception& e){
@@ -113,7 +124,8 @@ namespace LisaDeskbridge {
     }
 
     void Bridge::stopLisaControllerProxy(){
-        std::cout << "Stopping L-ISA Controller Proxy.." << std::endl;
+        log(LogLevelInfo,  "Stopping L-ISA Controller Proxy.." );
+
         lisaControllerProxy.stop();
     }
 

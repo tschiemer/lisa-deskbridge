@@ -21,12 +21,9 @@
 
 namespace LisaDeskbridge {
 
-    VirtualMidiDevice::VirtualMidiDevice(MidiReceiverDelegate &delegate) :  midiIn({
-                 .on_message= [&](const libremidi::message& message) {
-                     midiReceiverDelegate->receivedMessage(message);
-                 }
-         }) {
-        midiReceiverDelegate = &delegate;
+    VirtualMidiDevice::VirtualMidiDevice(MidiReceiver::Delegate &delegate) :
+        MidiReceiver_Single_Impl(delegate){
+        // do nothing
     }
 
     void VirtualMidiDevice::start(std::basic_string_view<char> portName){

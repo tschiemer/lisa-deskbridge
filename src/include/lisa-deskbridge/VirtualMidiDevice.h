@@ -19,33 +19,25 @@
 #ifndef LISA_DESKBRIDGE_VIRTUALMIDIDEVICE_H
 #define LISA_DESKBRIDGE_VIRTUALMIDIDEVICE_H
 
-#include "Midi.h"
+#include "MidiReceiver.h"
+#include "MidiSender.h"
 
 #include <libremidi/libremidi.hpp>
 
 namespace LisaDeskbridge {
 
-    class VirtualMidiDevice : MidiSender {
+    class VirtualMidiDevice : public MidiReceiver_Single_Impl, public MidiSender_Single_Impl {
 
         public:
 
             static constexpr char kDefaultPortName[] = "L-ISA Deskbridge";
 
-        protected:
-
-            MidiReceiverDelegate * midiReceiverDelegate;
-
-            libremidi::midi_in midiIn;
-            libremidi::midi_out midiOut;
-
         public:
 
-            VirtualMidiDevice(MidiReceiverDelegate &delegate);
+            VirtualMidiDevice(MidiReceiver::Delegate &delegate);
 
             void start(std::basic_string_view<char> portName = kDefaultPortName);
             void stop();
-
-
 
     };
 

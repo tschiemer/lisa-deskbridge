@@ -1,6 +1,6 @@
 [submodule "src/third_party/oscpack"]
 	path = src/third_party/oscpack
-	url = git@github.com:RossBencina/oscpack.git
+	url = https://github.com/RossBencina/oscpack.git
 [submodule "src/third_party/libremidi"]
 	path = src/third_party/libremidi
-	url = git@github.com:celtera/libremidi.git
+	url = https://github.com/celtera/libremidi.git

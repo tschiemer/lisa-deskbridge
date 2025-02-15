@@ -23,13 +23,21 @@
 
 namespace LisaDeskbridge {
 
-    enum LogLevel_t {LogLevelInfo, LogLevelDebug};
+    enum LogLevel {LogLevelNone, LogLevelInfo, LogLevelDebug};
 
-    void setLogLevel(LogLevel_t level);
+    inline bool isValidLogLevel(LogLevel logLevel){
+        return (
+                LogLevelNone == logLevel ||
+                LogLevelInfo == logLevel ||
+                LogLevelDebug == logLevel
+        );
+    }
+
+    void setLogLevel(LogLevel level);
 
     void setLogFile(FILE * file);
 
-    void log(LogLevel_t level, const char * msg, ...);
+    void log(LogLevel level, const char * msg, ...);
 
     void error(const char * msg, ...);
 }

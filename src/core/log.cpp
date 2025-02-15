@@ -22,11 +22,11 @@
 
 namespace LisaDeskbridge {
 
-    static LogLevel_t logLevel = LogLevelInfo;
+    static LogLevel logLevel = LogLevelInfo;
 
     static FILE * logFile = stdout;
 
-    void setLogLevel(LogLevel_t level){
+    void setLogLevel(LogLevel level){
         logLevel = level;
     }
 
@@ -34,7 +34,7 @@ namespace LisaDeskbridge {
         logFile = file;
     }
 
-    void log(LogLevel_t level, const char * msg, ...){
+    void log(LogLevel level, const char * msg, ...){
 
         if (logLevel < level){
             return;
@@ -49,6 +49,8 @@ namespace LisaDeskbridge {
                 break;
             case LogLevelDebug:
                 fprintf(logFile, "DEBUG ");
+                break;
+            default:
                 break;
         }
 

@@ -30,14 +30,14 @@ static char * argv0 = nullptr;
 LisaDeskbridge::Bridge * bridge;
 
 static struct {
-    bool verbose;
+    LisaDeskbridge::LogLevel logLevel;
     std::basic_string_view<char> bridgeName;
     LisaDeskbridge::Bridge::BridgeOpts bridgeOpts;
     unsigned short localPort;
     std::basic_string_view<char> lisaHost;
     unsigned short lisaPort;
 } opts = {
-    .verbose = false,
+    .logLevel = LisaDeskbridge::LogLevelInfo,
     .bridgeName = "",
     .localPort = LisaDeskbridge::kRemotePortDefault,
     .lisaHost = "127.0.0.1",
@@ -47,14 +47,14 @@ static struct {
 
 static void help(){
     fprintf(stdout,
-        "Usage: %s [-h|-?] [-v] [(-o|--bridge-opt <key1>=<value1>)*] [...] [<bridge>]\n"
+        "Usage: %s [-h|-?] [-v<verbosity>] [(-o|--bridge-opt <key1>=<value1>)*] [...] [<bridge>]\n"
         "Bridge different custom control elements to comfortably control L-ISA Controller.\n"
         "For further documentation see https://github.com/tschiemer/lisa-deskbridge\n"
         "\nArguments:\n"
         "\t <bridge>                Bridge to use: SQ6\n"
         "\nOptions:\n"
         "\t -h, -?                  Show this help\n"
-        "\t -v                      Verbose output\n"
+        "\t -v<verbosity>           Verbose output (in 0 (none), 1 (info = default), 2 (debug)\n"
         "\t -p,--local-port         Local port to receive L-ISA Controller OSC messages (default: %hu)\n"
         "\t --lisa-host             L-ISA Controller host/ip (default: %s)\n"
         "\t --lisa-port             L-ISA Controller port (default: %hu)\n"
@@ -90,7 +90,7 @@ int main(int argc, char * argv[]) {
                 {0,0,0,0}
         };
 
-        c = getopt_long(argc, argv, "?hvo:p:",
+        c = getopt_long(argc, argv, "?hv:o:p:",
                         long_options, &option_index);
         if (c == -1)
             break;
@@ -120,8 +120,13 @@ int main(int argc, char * argv[]) {
                 break;
 
             case 'v':
-//                opts.verbose = true;
-                LisaDeskbridge::setLogLevel(LisaDeskbridge::LogLevelDebug);
+                opts.logLevel = (LisaDeskbridge::LogLevel)std::atoi(optarg);
+                if (!isValidLogLevel(opts.logLevel)){
+                    std::cout << "Invalid verbosity level -v <verbosity> = " << optarg << std::endl;
+                    help();
+                    return EXIT_FAILURE;
+                }
+                LisaDeskbridge::setLogLevel(opts.logLevel);
                 break;
 
             case '?':

@@ -18,7 +18,7 @@
 
 #include "log.h"
 
-#include <iostream>
+#include <stdarg.h>
 
 namespace LisaDeskbridge {
 

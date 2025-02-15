@@ -13,11 +13,10 @@ add_subdirectory(src/third_party/libremidi EXCLUDE_FROM_ALL)
 
 include_directories(src/include/lisa-deskbridge)
 
-add_executable(lisa-deskbridge
-        src/core/main.cpp
+add_library(lisa-deskbridge
         src/include/lisa-deskbridge/LisaController.h
         src/core/LisaControllerProxy.cpp
-        src/include/lisa-deskbridge/LisaControllerProxy.h
+        src/include/lisa-deskbridge/LisaController.h
         src/core/MidiReceiver.cpp
         src/include/lisa-deskbridge/MidiReceiver.h
         src/core/MidiSender.cpp
@@ -34,5 +33,9 @@ add_executable(lisa-deskbridge
         src/include/lisa-deskbridge/bridges/Generic.h
         src/core/log.cpp
         src/include/lisa-deskbridge/log.h)
-
 target_link_libraries(lisa-deskbridge oscpack libremidi)
+
+add_executable(lisa-deskbridge-cli
+        src/core/main.cpp src/core/SQMidiControl.cpp src/include/lisa-deskbridge/SQMidiControl.h)
+
+target_link_libraries(lisa-deskbridge-cli lisa-deskbridge)

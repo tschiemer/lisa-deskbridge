@@ -34,11 +34,11 @@
 namespace LisaDeskbridge {
 
     void LisaControllerProxy::start(unsigned short listenPort, std::basic_string_view<char> & controllerAddress, unsigned short controllerPort){
-        if (mIsRunning){
+                if (mIsRunning){
             return;
         }
 
-        log(LogLevelInfo, "Listening for L-ISA Controller messages on port %u", listenPort);
+        log(LogLevelInfo, "Listening for L-ISA Controller messages on port %d", listenPort);
 
         udpListeningReceiveSocket = new UdpListeningReceiveSocket(
                 IpEndpointName( IpEndpointName::ANY_ADDRESS, listenPort),
@@ -49,7 +49,7 @@ namespace LisaDeskbridge {
             socket->Run();
         }, udpListeningReceiveSocket);
 
-        log(LogLevelInfo, "Sending to L-ISA Controller on host %s on port %u",controllerAddress, controllerPort);
+        log(LogLevelInfo, "Sending to L-ISA Controller on host %s:%d", controllerAddress.data(), controllerPort);
 
         udpTransmitSocket = new UdpTransmitSocket( IpEndpointName( controllerAddress.data(), controllerPort ) );
 

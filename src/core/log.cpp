@@ -40,9 +40,6 @@ namespace LisaDeskbridge {
             return;
         }
 
-        va_list args;
-        va_start(args, msg);
-
         switch(level){
             case LogLevelInfo:
                 fprintf(logFile, "INFO ");
@@ -54,6 +51,8 @@ namespace LisaDeskbridge {
                 break;
         }
 
+        va_list args;
+        va_start(args, msg);
 
         vfprintf(logFile, msg, args);
         fprintf(logFile, "\n");

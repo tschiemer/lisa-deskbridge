@@ -102,7 +102,7 @@ namespace LisaDeskbridge {
 
                 SQ6(BridgeOpts &opts);
 
-            bool init();
+                bool init();
                 void deinit();
 
             protected:  // Controller logic

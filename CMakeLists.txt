@@ -7,8 +7,10 @@ set(CMAKE_CXX_STANDARD 17)
 include_directories(src/third_party/oscpack/)
 add_subdirectory(src/third_party/oscpack EXCLUDE_FROM_ALL)
 
-
 add_subdirectory(src/third_party/libremidi EXCLUDE_FROM_ALL)
+
+#include_directories(src/third_party/sqmix-mitm/src)
+add_subdirectory(src/third_party/sqmix-mitm EXCLUDE_FROM_ALL)
 
 
 include_directories(src/include/lisa-deskbridge)
@@ -32,10 +34,10 @@ add_library(lisa-deskbridge
         src/core/bridges/Generic.cpp
         src/include/lisa-deskbridge/bridges/Generic.h
         src/core/log.cpp
-        src/include/lisa-deskbridge/log.h)
-target_link_libraries(lisa-deskbridge oscpack libremidi)
+        src/include/lisa-deskbridge/log.h src/core/bridges/SQmitm.cpp src/include/lisa-deskbridge/bridges/SQmitm.h)
+target_link_libraries(lisa-deskbridge oscpack libremidi sqmixmitm)
 
 add_executable(lisa-deskbridge-cli
-        src/core/main.cpp src/core/SQMidiControl.cpp src/include/lisa-deskbridge/SQMidiControl.h)
+        src/core/main.cpp)
 
 target_link_libraries(lisa-deskbridge-cli lisa-deskbridge)

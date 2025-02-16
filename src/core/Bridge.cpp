@@ -21,8 +21,10 @@
 #include <iostream>
 #include <csignal>
 
-#include "bridges/SQ6.h"
 #include "bridges/Generic.h"
+#include "bridges/SQ6.h"
+#include "bridges/SQmitm.h"
+
 #include "log.h"
 
 #if defined(__APPLE__)
@@ -35,8 +37,14 @@ namespace LisaDeskbridge {
 #if defined(__APPLE__)
     static CFRunLoopRef runLoopRef = nullptr;
 
+    // singleton of bridge
+    //TODO does it make sense to have a singleton only? likely yes.
+    static Bridge * bridgeSingleton = nullptr;
+
     static void signal_handler(int i){
-        CFRunLoopStop(runLoopRef);
+        assert(bridgeSingleton != nullptr);
+
+        bridgeSingleton->stop();
     }
 #endif
 
@@ -54,6 +62,9 @@ namespace LisaDeskbridge {
             else if (name.compare(Bridges::SQ6::kName) == 0){
                 bridge = new Bridges::SQ6(opts);
             }
+            else if (name.compare(Bridges::SQmitm::kName) == 0){
+                bridge = new Bridges::SQmitm(opts);
+            }
 
         } catch (std::exception &e){
             log(LogLevelDebug, "Exception when creating bridge: %s", e.what());
@@ -62,6 +73,11 @@ namespace LisaDeskbridge {
     }
 
     bool Bridge::init(){
+
+#if defined(__APPLE__)
+      assert(bridgeSingleton == nullptr);
+        bridgeSingleton = this;
+#endif
 
         if (startLisaControllerProxy() == false){
             return false;
@@ -93,11 +109,16 @@ namespace LisaDeskbridge {
         sigaddset(&wset,SIGTERM);
         int sig;
         sigwait(&wset,&sig);
+
+        log(LogLevelInfo, "Stopping..");
 #endif
 
     }
 
     void Bridge::stop(){
+
+        log(LogLevelInfo, "Stopping!");
+
 #if defined(__APPLE__)
         CFRunLoopStop(runLoopRef);
 #else
@@ -108,6 +129,10 @@ namespace LisaDeskbridge {
     void Bridge::deinit(){
 
         stopLisaControllerProxy();
+
+#if defined(__APPLE__)
+      bridgeSingleton = nullptr;
+#endif
     }
 
     bool Bridge::startLisaControllerProxy(){

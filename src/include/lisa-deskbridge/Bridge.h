@@ -46,9 +46,9 @@ namespace LisaDeskbridge {
 
             virtual bool init();
 
-            virtual void runloop();
+            void runloop();
 
-            virtual void stop();
+            void stop();
 
             virtual void deinit();
 

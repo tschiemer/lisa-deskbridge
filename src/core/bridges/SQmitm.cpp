@@ -20,6 +20,7 @@
 
 #include "log.h"
 
+#include "libremidi/message.hpp"
 
 namespace LisaDeskbridge {
     namespace Bridges {
@@ -94,19 +95,17 @@ namespace LisaDeskbridge {
             if (initializeCallbacksOnce){
                 initializeCallbacksOnce = false;
 
-                mitm_.onConnectionStateChanged([&](SQMixMitm::MixMitm::ConnectionState state){
+                mitm_.onConnectionStateChanged([&](SQMixMitm::MixMitm::ConnectionState state, SQMixMitm::Version &version){
                     if (state == SQMixMitm::MixMitm::Connected) {
 
-                        SQMixMitm::MixMitm::Version version = mitm_.version();
-
                         log(LogLevelInfo,"Connected to mixer (firmware %d.%d.%d r%d)\n",
-                                version.major, version.minor, version.patch, version.build);
+                                version.major(), version.minor(), version.patch(), version.build());
                     } else {
 
                     }
                 });
 
-                mitm_.onEvent(SQMixMitm::Event::Types::ChannelSelect, [&](SQMixMitm::Event &event){
+                mitm_.onEvent(SQMixMitm::Event::Type::ChannelSelect, [&](SQMixMitm::Event &event){
 
                     log(LogLevelDebug, "event ChannelSelect %d", event.ChannelSelect_channel());
 
@@ -117,9 +116,9 @@ namespace LisaDeskbridge {
                     onSelectedChannel(event.ChannelSelect_channel());
                 });
 
-                mitm_.onEvent(SQMixMitm::Event::Types::MidiSoftRotary, [&](SQMixMitm::Event &event){
+                mitm_.onEvent(SQMixMitm::Event::Type::MidiSoftRotary, [&](SQMixMitm::Event &event){
 
-                    log(LogLevelDebug, "event MidiSoftRotary %d", event.ChannelSelect_channel());
+                    log(LogLevelDebug, "event MidiSoftRotary", event.ChannelSelect_channel());
 
                     if (mitm_.connectionState() != SQMixMitm::MixMitm::Connected || mitm_.state() != SQMixMitm::MixMitm::Running){
                         return;
@@ -129,9 +128,9 @@ namespace LisaDeskbridge {
                                 event.MidiSoftRotary_value1(), event.MidiSoftRotary_value2());
                 });
 
-                mitm_.onEvent(SQMixMitm::Event::Types::MidiSoftKey, [&](SQMixMitm::Event &event){
+                mitm_.onEvent(SQMixMitm::Event::Type::MidiSoftKey, [&](SQMixMitm::Event &event){
 
-                    log(LogLevelDebug, "event MidiSoftKey %d", event.ChannelSelect_channel());
+                    log(LogLevelDebug, "event MidiSoftKey", event.ChannelSelect_channel());
 
                     if (mitm_.connectionState() != SQMixMitm::MixMitm::Connected || mitm_.state() != SQMixMitm::MixMitm::Running){
                         return;
@@ -140,6 +139,29 @@ namespace LisaDeskbridge {
                     onMidiEvent(event.MidiSoftKey_channel(), event.MidiSoftKey_type(), event.MidiSoftKey_value1(),
                                 event.MidiSoftKey_value2());
                 });
+
+                mitm_.onEvent(SQMixMitm::Event::Type::MidiFaderLevel, [&](SQMixMitm::Event &event){
+
+                    log(LogLevelDebug, "event MidiFaderLevel ch %d %d", event.MidiFaderLevel_channel(), event.MidiFaderLevel_value());
+
+                    if (mitm_.connectionState() != SQMixMitm::MixMitm::Connected || mitm_.state() != SQMixMitm::MixMitm::Running){
+                        return;
+                    }
+
+                    onMidiFaderLevel(event.MidiFaderLevel_channel(), event.MidiFaderLevel_value());
+                });
+
+//                mitm_.onEvent(SQMixMitm::Event::Types::MidiFaderMute, [&](SQMixMitm::Event &event){
+//
+//                    log(LogLevelDebug, "event MidiFaderMute ch %d %d %d %d", event.MidiFaderMute_channel(), event.databyte1(), event.databyte2(), event.databyte3());
+//
+//                    if (mitm_.connectionState() != SQMixMitm::MixMitm::Connected || mitm_.state() != SQMixMitm::MixMitm::Running){
+//                        return;
+//                    }
+//
+//                    onMidiFaderLevel(event.MidiFaderMute_channel(), event.MidiFaderLevel_value());
+//                });
+
             }
 
             log(LogLevelInfo, "Starting SQ MITM Service for mixer at %s", mixerIp_.data());
@@ -202,16 +224,16 @@ namespace LisaDeskbridge {
             // let's use channel range 1-16
             channel += 1;
 
-            if (type == SQMixMitm::Event::MidiType::NoteOn){
+            if (type == (int)libremidi::message_type::NOTE_ON){
                 onMidiNoteOn(channel, value1, value2);
             }
-            else if (type == SQMixMitm::Event::MidiType::NoteOff){
+            else if (type == (int)libremidi::message_type::NOTE_OFF){
                 onMidiNoteOff(channel, value1, value2);
             }
-            else if (type == SQMixMitm::Event::MidiType::ControlChange){
+            else if (type == (int)libremidi::message_type::CONTROL_CHANGE){
                 onMidiControlChange(channel, value1, value2);
             }
-            else if (type == SQMixMitm::Event::MidiType::ProgramChange){
+            else if (type == (int)libremidi::message_type::PROGRAM_CHANGE){
                 onMidiProgramChange(channel, value1);
             }
         }
@@ -351,6 +373,30 @@ namespace LisaDeskbridge {
 
         }
 
+        void SQmitm::onMidiFaderLevel(int channel, int value){
+
+            channel += 1;
+
+            if (channel == 1){
+                lisaControllerProxy.setMasterFaderPos((float)value / 255.0);
+            }
+            else if (channel == 2){
+                lisaControllerProxy.setReverbFaderPos((float)value / 255.0);
+            }
+            else if (channel == 3){
+                lisaControllerProxy.setMonitorFaderPos((float)value / 255.0);
+            }
+            else if (channel == 4){
+                lisaControllerProxy.setUserFaderNPos(1,(float)value / 255.0);
+            }
+            else if (channel == 5){
+                lisaControllerProxy.setUserFaderNPos(2,(float)value / 255.0);
+            }
+        }
+
+        void SQmitm::onMidiFaderMute(int channel){
+
+        }
 
         void SQmitm::receivedMasterFaderPos(float pos){
             // only process if completely started
@@ -358,6 +404,7 @@ namespace LisaDeskbridge {
                 return;
             }
 
+//            SQMixMitm::Command cmd = SQMixMitm::Command::midiFaderLevel()
             //TODO
 //            sqMidiControlClient.sendControlChange(1,0,(int)(127.0 * pos));
         }

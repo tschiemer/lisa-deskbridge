@@ -21,8 +21,8 @@
 
 
 #include "Bridge.h"
-#include "DiscoveryResponder.h"
-#include "MixMitm.h"
+#include "sqmixmitm/DiscoveryResponder.h"
+#include "sqmixmitm/MixMitm.h"
 
 namespace LisaDeskbridge {
     namespace Bridges {
@@ -80,6 +80,9 @@ namespace LisaDeskbridge {
             void onMidiNoteOff(int channel, int note, int velocity);
             void onMidiControlChange(int channel, int cc, int value);
             void onMidiProgramChange(int channel, int program);
+
+            void onMidiFaderLevel(int channel, int value);
+            void onMidiFaderMute(int channel);
 
         protected: // LisaDeskbridge::LisaControllerProxy::Delegate
 

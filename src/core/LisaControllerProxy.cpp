@@ -130,7 +130,7 @@ namespace LisaDeskbridge {
         } catch( osc::Exception& e ){
             // any parsing errors such as unexpected argument types, or
             // missing arguments get thrown as exceptions.
-            error("LisaControllerProxy: parsing message for address '%s': %s", m.AddressPattern(), e.what());
+            log(LogLevelError,"LisaControllerProxy: parsing message for address '%s': %s", m.AddressPattern(), e.what());
         }
     }
 

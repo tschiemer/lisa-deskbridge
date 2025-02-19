@@ -19,18 +19,22 @@
 #include <getopt.h>
 #include <iostream>
 
+#include <syslog.h>
+
 #include "log.h"
+#include "sqmixmitm/log.h"
 
 #include "Bridge.h"
 #include "bridges/Generic.h"
 #include "bridges/SQ6.h"
+#include "bridges/SQmitm.h"
 
 static char * argv0 = nullptr;
 
 LisaDeskbridge::Bridge * bridge;
 
 static struct {
-    LisaDeskbridge::LogLevel logLevel;
+    int logLevel;
     std::basic_string_view<char> bridgeName;
     LisaDeskbridge::Bridge::BridgeOpts bridgeOpts;
     unsigned short localPort;
@@ -54,7 +58,7 @@ static void help(){
         "\t <bridge>                Bridge to use: SQ6\n"
         "\nOptions:\n"
         "\t -h, -?                  Show this help\n"
-        "\t -v<verbosity>           Verbose output (in 0 (none), 1 (info = default), 2 (debug)\n"
+        "\t -v<verbosity>           Verbose output (in 0 (none), 1 (error), 2 (info = default), 3 (debug)\n"
         "\t -p,--local-port         Local port to receive L-ISA Controller OSC messages (default: %hu)\n"
         "\t --lisa-host             L-ISA Controller host/ip (default: %s)\n"
         "\t --lisa-port             L-ISA Controller port (default: %hu)\n"
@@ -62,14 +66,17 @@ static void help(){
         "\nBridge options:\n"
         "%s\n"
         "%s\n"
+        "%s\n"
         "\nExamples:\n"
         "%s SQ6 #to use SQ6 bridge with default options\n"
         "%s -p 9000 --lisa-port 8880 --lisa-host 127.0.0.1 -o \"midiin=MIDI Control 1\" -o \"midiout=MIDI Control 1\" SQ6 # to use SQ6 bridge with custom options (which happen to be the default ones)\n"
+        "%s -v2 -o mixer-ip=10.0.0.100 SQmitm # SQmitm bridge with INFO-level verbosity\n"
         , argv0,
         LisaDeskbridge::kRemotePortDefault, LisaDeskbridge::kLisaControllerHostDefault.data(), LisaDeskbridge::kLisaControllerPortDefault,
         LisaDeskbridge::Bridges::Generic::helpOpts,
         LisaDeskbridge::Bridges::SQ6::helpOpts,
-        argv0, argv0 // examples
+        LisaDeskbridge::Bridges::SQmitm::helpOpts,
+        argv0, argv0, argv0 // examples
     );
 }
 
@@ -121,12 +128,6 @@ int main(int argc, char * argv[]) {
 
             case 'v':
                 opts.logLevel = (LisaDeskbridge::LogLevel)std::atoi(optarg);
-                if (!isValidLogLevel(opts.logLevel)){
-                    std::cout << "Invalid verbosity level -v <verbosity> = " << optarg << std::endl;
-                    help();
-                    return EXIT_FAILURE;
-                }
-                LisaDeskbridge::setLogLevel(opts.logLevel);
                 break;
 
             case '?':
@@ -150,6 +151,13 @@ int main(int argc, char * argv[]) {
         help();
         return EXIT_FAILURE;
     }
+
+    // setup logging components
+    LisaDeskbridge::setLogLevel((LisaDeskbridge::LogLevel)opts.logLevel);
+
+    SQMixMitm::setLogLevel((SQMixMitm::LogLevel)opts.logLevel);
+    SQMixMitm::setLogFunction((SQMixMitm::LogFunction)LisaDeskbridge::log);
+
 
     opts.bridgeName = argv[optind];
 

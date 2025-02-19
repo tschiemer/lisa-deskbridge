@@ -66,7 +66,7 @@ namespace LisaDeskbridge {
             try {
                 midiClient.start(midiInPortName, midiOutPortName);
             } catch (const std::exception & e){
-                error("starting MIDI Client: %s", e.what() );
+                log(LogLevelError, "starting MIDI Client: %s", e.what() );
                 return false;
             }
 

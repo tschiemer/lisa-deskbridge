@@ -16,30 +16,39 @@ Use the changes as per [this pull request here](https://github.com/RossBencina/o
 ## Usage
 
 ```shell
-Usage: ./lisa-deskbridge [-h|-?] [-v] [(-o|--bridge-opt <key1>=<value1>)*] [...] [<bridge>]
+Usage: lisa-deskbridge-cli [-h|-?] [-v<verbosity>] [(-o|--bridge-opt <key1>=<value1>)*] [...] [<bridge>]
 Bridge different custom control elements to comfortably control L-ISA Controller.
 For further documentation see https://github.com/tschiemer/lisa-deskbridge
 
 Arguments:
-	 <bridge>                Bridge to use: Generic, SQ6
+	 <bridge>                Bridge to use: SQ6
 
 Options:
 	 -h, -?                  Show this help
-	 -v                      Verbose output
+	 -v<verbosity>           Verbose output (in 0 (none), 1 (error), 2 (info = default), 3 (debug)
 	 -p,--local-port         Local port to receive L-ISA Controller OSC messages (default: 9000)
 	 --lisa-host             L-ISA Controller host/ip (default: 127.0.0.1)
 	 --lisa-port             L-ISA Controller port (default: 8880)
 	 -o,--bridge-opt         Pass (multiple) options to bridge using form 'key=value'
 
 Bridge options:
+	Generic Options:
+		 midiin    Name of MIDI In port to use
+		 midiout    Name of MIDI out port to use 
+
 	SQ6 Options:
 		 midiin    Name of MIDI In port to use (default: 'MIDI Control 1')
 		 midiout    Name of MIDI out port to use (default: 'MIDI Control 1')
 
+	SQmitm Options:
+		 mixer-ip=<mixer-ip>               IP of mixer (REQUIRED)
+		 mitm-name=<name-of-mitm-service>  Name visible to mixing apps (default: L-ISA Deskbridge)
+
 
 Examples:
-./lisa-deskbridge SQ6 #to use SQ6 bridge with default options
-./lisa-deskbridge -p 9000 --lisa-port 8880 --lisa-host 127.0.0.1 -o "midiin=MIDI Control 1" -o "midiout=MIDI Control 1" SQ6  # to use SQ6 bridge with custom options (which happen to be the default ones)
+lisa-deskbridge-cli SQ6 #to use SQ6 bridge with default options
+lisa-deskbridge-cli -p 9000 --lisa-port 8880 --lisa-host 127.0.0.1 -o "midiin=MIDI Control 1" -o "midiout=MIDI Control 1" SQ6 # to use SQ6 bridge with custom options (which happen to be the default ones)
+lisa-deskbridge-cli -v2 -o mixer-ip=10.0.0.100 SQmitm # SQmitm bridge with INFO-level verbosity
 ```
 
 ## Bridges

@@ -19,6 +19,7 @@
 #include "bridges/SQmitm.h"
 
 #include "log.h"
+//#include "sqmixmitm/log.h"
 
 #include "libremidi/message.hpp"
 

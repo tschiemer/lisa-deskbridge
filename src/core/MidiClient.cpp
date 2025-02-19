@@ -50,7 +50,7 @@ namespace LisaDeskbridge {
                         }
                         stdx::error e = midiIn.open_port(port, mInPortName);
                         if (e.is_set()){
-                            error("opening midi IN port: %s", e.message().data() );
+                            log(LogLevelError,"opening midi IN port: %s", e.message().data() );
                         }
                     }
                 },
@@ -73,7 +73,7 @@ namespace LisaDeskbridge {
                         }
                         stdx::error e = midiOut.open_port(port, mOutPortName);
                         if (e.is_set()){
-                            error("opening midi OUT port: %s", e.message().data() );
+                            log(LogLevelError,"opening midi OUT port: %s", e.message().data() );
                         }
                     }
                 },

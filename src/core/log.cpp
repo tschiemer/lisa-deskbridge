@@ -19,12 +19,19 @@
 #include "log.h"
 
 #include <stdarg.h>
+#include <cassert>
 
 namespace LisaDeskbridge {
 
-    static LogLevel logLevel = LogLevelInfo;
+    static LogLevel logLevel = LogLevelError;
 
     static FILE * logFile = stdout;
+
+    LogFunction log = defaultLog;
+
+    LogLevel getLogLevel(){
+        return logLevel;
+    }
 
     void setLogLevel(LogLevel level){
         logLevel = level;
@@ -34,13 +41,21 @@ namespace LisaDeskbridge {
         logFile = file;
     }
 
-    void log(LogLevel level, const char * msg, ...){
+    void setLogFunction(LogFunction function){
+        assert(function != nullptr);
+        log = function;
+    }
+
+    void defaultLog(LogLevel level, const char * msg, ...){
 
         if (logLevel < level){
             return;
         }
 
         switch(level){
+            case LogLevelError:
+                fprintf(logFile, "ERROR ");
+                break;
             case LogLevelInfo:
                 fprintf(logFile, "INFO ");
                 break;
@@ -51,29 +66,18 @@ namespace LisaDeskbridge {
                 break;
         }
 
+        // print message
         va_list args;
         va_start(args, msg);
 
         vfprintf(logFile, msg, args);
+
+        va_end(args);
+
+        // NL
         fprintf(logFile, "\n");
-        fflush(logFile);
 
-        va_end(args);
-
-    }
-
-    void error(const char * msg, ...){
-
-        va_list args;
-        va_start(args, msg);
-
-        fprintf(stderr, "ERROR ");
-        vfprintf(stderr, msg, args);
-        fprintf(stderr, "\n");
-        fflush(stderr);
-
-        va_end(args);
-
+//        fflush(logFile);
     }
 
 }

@@ -16,8 +16,8 @@
         * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef LISA_DESKBRIDGE_SQ6_H
-#define LISA_DESKBRIDGE_SQ6_H
+#ifndef LISA_DESKBRIDGE_SQ_H
+#define LISA_DESKBRIDGE_SQ_H
 
 #include "Bridge.h"
 
@@ -26,7 +26,7 @@
 
 namespace LisaDeskbridge {
     namespace Bridges {
-        class SQ6 : public Bridge {
+        class SQ : public Bridge {
 
             public:
 
@@ -48,11 +48,11 @@ namespace LisaDeskbridge {
 
                     protected:
 
-                        SQ6 * sq6 = nullptr;
+                        SQ * sq6 = nullptr;
 
                     public:
 
-                        MixingStationDelegate(SQ6 &sq){
+                        MixingStationDelegate(SQ &sq){
                             sq6 = &sq;
                         }
 
@@ -65,11 +65,11 @@ namespace LisaDeskbridge {
 
                     protected:
 
-                        SQ6 * sq6 = nullptr;
+                        SQ * sq6 = nullptr;
 
                     public:
 
-                        SQMidiControlDelegate(SQ6 &sq){
+                        SQMidiControlDelegate(SQ &sq){
                             sq6 = &sq;
                         }
 
@@ -100,7 +100,7 @@ namespace LisaDeskbridge {
 
             public: // Controller interface
 
-                SQ6(BridgeOpts &opts);
+                SQ(BridgeOpts &opts);
 
                 bool init();
                 void deinit();
@@ -127,4 +127,4 @@ namespace LisaDeskbridge {
 
 
 
-#endif //LISA_DESKBRIDGE_SQ6_H
+#endif //LISA_DESKBRIDGE_SQ_H

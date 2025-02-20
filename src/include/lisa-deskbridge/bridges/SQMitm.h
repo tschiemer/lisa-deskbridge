@@ -27,7 +27,7 @@
 namespace LisaDeskbridge {
     namespace Bridges {
 
-        class SQmitm : public Bridge {
+        class SQMitm : public Bridge {
 
         public:
 
@@ -63,7 +63,7 @@ namespace LisaDeskbridge {
 
         public: // Controller interface
 
-            SQmitm(BridgeOpts &opts);
+            SQMitm(BridgeOpts &opts);
 
             bool init();
 //            void stop();

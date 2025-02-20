@@ -16,7 +16,7 @@
         * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "bridges/SQ6.h"
+#include "bridges/SQ.h"
 
 #include <iostream>
 
@@ -26,7 +26,7 @@ namespace LisaDeskbridge {
     namespace Bridges {
 
 
-        SQ6::SQ6(BridgeOpts &opts) :
+        SQ::SQ(BridgeOpts &opts) :
             Bridge(opts),
             mixingStationDelegate(*this), mixingStationVirtualMidiDevice(mixingStationDelegate),
             sqMidiControlDelegate(*this), sqMidiControlClient(sqMidiControlDelegate){
@@ -39,7 +39,7 @@ namespace LisaDeskbridge {
             }
         }
 
-        bool SQ6::startMixingStationVirtualMidiDevice(){
+        bool SQ::startMixingStationVirtualMidiDevice(){
             log(LogLevelInfo, "Starting virtual MIDI Device '%s' for channel selection ..",VirtualMidiDevice::kDefaultPortName );
 
             try {
@@ -52,13 +52,13 @@ namespace LisaDeskbridge {
             return true;
         }
 
-        void SQ6::stopMixingStationVirtualMidiDevice(){
+        void SQ::stopMixingStationVirtualMidiDevice(){
             log(LogLevelInfo, "Stopping virtual MIDI Device for channel selection ..");
 
             mixingStationVirtualMidiDevice.stop();
         }
 
-        bool SQ6::startSQMidiControlClient() {
+        bool SQ::startSQMidiControlClient() {
             log(LogLevelInfo, "Starting MIDI Client..");
 
             try {
@@ -71,13 +71,13 @@ namespace LisaDeskbridge {
             return true;
         }
 
-        void SQ6::stopSQMidiControlClient() {
+        void SQ::stopSQMidiControlClient() {
             log(LogLevelInfo, "Stopping MIDI Client..");
 
             sqMidiControlClient.stop();
         }
 
-        bool SQ6::init() {
+        bool SQ::init() {
 
             if (state == State_Started){
                 return true;
@@ -108,7 +108,7 @@ namespace LisaDeskbridge {
             return true;
         }
 
-        void SQ6::deinit() {
+        void SQ::deinit() {
 
             if (state != State_Started){
                 return;
@@ -124,7 +124,7 @@ namespace LisaDeskbridge {
             state = State_Stopped;
         }
 
-        void SQ6::MixingStationDelegate::receivedNoteOn(int channel, int note, int velocity){
+        void SQ::MixingStationDelegate::receivedNoteOn(int channel, int note, int velocity){
             // only process if completely started
             if (sq6->state != State_Started){
                 return;
@@ -190,7 +190,7 @@ namespace LisaDeskbridge {
         }
 
 
-        void SQ6::SQMidiControlDelegate::receivedNoteOn(int channel, int note, int velocity){
+        void SQ::SQMidiControlDelegate::receivedNoteOn(int channel, int note, int velocity){
             // only process if completely started
             if (sq6->state != State_Started){
                 return;
@@ -241,7 +241,7 @@ namespace LisaDeskbridge {
             } // channel == 3
 
         }
-        void SQ6::SQMidiControlDelegate::receivedNoteOff(int channel, int note, int velocity){
+        void SQ::SQMidiControlDelegate::receivedNoteOff(int channel, int note, int velocity){
             // only process if completely started
             if (sq6->state != State_Started){
                 return;
@@ -262,7 +262,7 @@ namespace LisaDeskbridge {
                 sq6->softBtn4 = ButtonState_Released;
             }
         }
-        void SQ6::SQMidiControlDelegate::receivedControlChange(int channel, int cc, int value){
+        void SQ::SQMidiControlDelegate::receivedControlChange(int channel, int cc, int value){
             // only process if completely started
             if (sq6->state != State_Started){
                 return;
@@ -329,7 +329,7 @@ namespace LisaDeskbridge {
                 }
             } // channel == 2
         }
-        void SQ6::SQMidiControlDelegate::receivedProgramChange(int channel, int program){
+        void SQ::SQMidiControlDelegate::receivedProgramChange(int channel, int program){
             // only process if completely started
             if (sq6->state != State_Started){
                 return;
@@ -344,7 +344,7 @@ namespace LisaDeskbridge {
             }
         }
 
-        void SQ6::receivedMasterFaderPos(float pos){
+        void SQ::receivedMasterFaderPos(float pos){
             // only process if completely started
             if (state != State_Started){
                 return;
@@ -353,7 +353,7 @@ namespace LisaDeskbridge {
             sqMidiControlClient.sendControlChange(1,0,(int)(127.0 * pos));
         }
 
-        void SQ6::receivedReverbFaderPos(float pos){
+        void SQ::receivedReverbFaderPos(float pos){
             // only process if completely started
             if (state != State_Started){
                 return;

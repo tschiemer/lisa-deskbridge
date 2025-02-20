@@ -29,15 +29,15 @@ add_library(lisa-deskbridge
         src/include/lisa-deskbridge/VirtualMidiDevice.h
         src/core/Bridge.cpp
         src/include/lisa-deskbridge/Bridge.h
-        src/core/bridges/SQ6.cpp
-        src/include/lisa-deskbridge/bridges/SQ6.h
+        src/core/bridges/SQ.cpp
+        src/include/lisa-deskbridge/bridges/SQ.h
         src/core/bridges/Generic.cpp
         src/include/lisa-deskbridge/bridges/Generic.h
         src/core/log.cpp
-        src/include/lisa-deskbridge/log.h src/core/bridges/SQmitm.cpp src/include/lisa-deskbridge/bridges/SQmitm.h)
+        src/include/lisa-deskbridge/log.h src/core/bridges/SQMitm.cpp src/include/lisa-deskbridge/bridges/SQMitm.h)
 target_link_libraries(lisa-deskbridge oscpack libremidi sqmixmitm)
 
 add_executable(lisa-deskbridge-cli
-        src/core/main.cpp)
+        src/tools/cli.cpp)
 
 target_link_libraries(lisa-deskbridge-cli lisa-deskbridge)

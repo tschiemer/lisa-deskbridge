@@ -22,8 +22,8 @@
 #include <csignal>
 
 #include "bridges/Generic.h"
-#include "bridges/SQ6.h"
-#include "bridges/SQmitm.h"
+#include "bridges/SQ.h"
+#include "bridges/SQMitm.h"
 
 #include "log.h"
 
@@ -59,11 +59,11 @@ namespace LisaDeskbridge {
             if (name.compare(Bridges::Generic::kName) == 0){
                 bridge = new Bridges::Generic(opts);
             }
-            else if (name.compare(Bridges::SQ6::kName) == 0){
-                bridge = new Bridges::SQ6(opts);
+            else if (name.compare(Bridges::SQ::kName) == 0){
+                bridge = new Bridges::SQ(opts);
             }
-            else if (name.compare(Bridges::SQmitm::kName) == 0){
-                bridge = new Bridges::SQmitm(opts);
+            else if (name.compare(Bridges::SQMitm::kName) == 0){
+                bridge = new Bridges::SQMitm(opts);
             }
 
         } catch (std::exception &e){

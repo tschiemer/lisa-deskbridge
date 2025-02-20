@@ -16,7 +16,7 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "bridges/SQmitm.h"
+#include "bridges/SQMitm.h"
 
 #include "log.h"
 //#include "sqmixmitm/log.h"
@@ -27,7 +27,7 @@ namespace LisaDeskbridge {
     namespace Bridges {
 
 
-        SQmitm::SQmitm(BridgeOpts &opts) :
+        SQMitm::SQMitm(BridgeOpts &opts) :
                 Bridge(opts){
 
             if (opts.contains("mixer-ip")){
@@ -40,7 +40,7 @@ namespace LisaDeskbridge {
         }
 
 
-        bool SQmitm::init() {
+        bool SQMitm::init() {
 
             if (state == State_Started){
                 return true;
@@ -63,7 +63,7 @@ namespace LisaDeskbridge {
             return true;
         }
 
-        void SQmitm::deinit() {
+        void SQMitm::deinit() {
 
             if (state != State_Started){
                 return;
@@ -83,7 +83,7 @@ namespace LisaDeskbridge {
         }
 
 
-        bool SQmitm::initMitm(){
+        bool SQMitm::initMitm(){
 
 //            mitm_.onConnectionStateChanged([&](SQMixMitm::MixMitm::ConnectionState state){
 //                if (state == SQMixMitm::MixMitm::Connected){
@@ -183,7 +183,7 @@ namespace LisaDeskbridge {
             return true;
         }
 
-        void SQmitm::onSelectedChannel(int channel){
+        void SQMitm::onSelectedChannel(int channel){
 
             // channel number starts at 0
             channel += 1;
@@ -220,7 +220,7 @@ namespace LisaDeskbridge {
             }
         }
 
-        void SQmitm::onMidiEvent(int channel, int type, int value1, int value2){
+        void SQMitm::onMidiEvent(int channel, int type, int value1, int value2){
 
             // let's use channel range 1-16
             channel += 1;
@@ -239,7 +239,7 @@ namespace LisaDeskbridge {
             }
         }
 
-        void SQmitm::onMidiNoteOn(int channel, int note, int velocity){
+        void SQMitm::onMidiNoteOn(int channel, int note, int velocity){
 
             log(LogLevelDebug, "midi Note On ch(%d) note(%d) velocity(%d)", channel, note, velocity);
 
@@ -286,7 +286,7 @@ namespace LisaDeskbridge {
             } // channel == 3
         }
 
-        void SQmitm::onMidiNoteOff(int channel, int note, int velocity){
+        void SQMitm::onMidiNoteOff(int channel, int note, int velocity){
 
             log(LogLevelDebug, "midi Note Off ch(%d) note(%d) velocity(%d)", channel, note, velocity);
 
@@ -304,7 +304,7 @@ namespace LisaDeskbridge {
             }
         }
 
-        void SQmitm::onMidiControlChange(int channel, int cc, int value){
+        void SQMitm::onMidiControlChange(int channel, int cc, int value){
 
             log(LogLevelDebug,"midi CC ch(%d) cc(%d) value(%d)", channel, cc, value);
 
@@ -368,13 +368,13 @@ namespace LisaDeskbridge {
             } // channel == 2
         }
 
-        void SQmitm::onMidiProgramChange(int channel, int program){
+        void SQMitm::onMidiProgramChange(int channel, int program){
 
             log(LogLevelDebug,"midi PC ch(%d) program(%d)", channel, program);
 
         }
 
-        void SQmitm::onMidiFaderLevel(int channel, int value){
+        void SQMitm::onMidiFaderLevel(int channel, int value){
 
             channel += 1;
 
@@ -395,11 +395,11 @@ namespace LisaDeskbridge {
             }
         }
 
-        void SQmitm::onMidiFaderMute(int channel){
+        void SQMitm::onMidiFaderMute(int channel){
 
         }
 
-        void SQmitm::receivedMasterFaderPos(float pos){
+        void SQMitm::receivedMasterFaderPos(float pos){
             // only process if completely started
             if (state != State_Started){
                 return;
@@ -410,7 +410,7 @@ namespace LisaDeskbridge {
 //            sqMidiControlClient.sendControlChange(1,0,(int)(127.0 * pos));
         }
 
-        void SQmitm::receivedReverbFaderPos(float pos){
+        void SQMitm::receivedReverbFaderPos(float pos){
             // only process if completely started
             if (state != State_Started){
                 return;

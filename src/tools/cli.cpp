@@ -26,8 +26,8 @@
 
 #include "Bridge.h"
 #include "bridges/Generic.h"
-#include "bridges/SQ6.h"
-#include "bridges/SQmitm.h"
+#include "bridges/SQ.h"
+#include "bridges/SQMitm.h"
 
 static char * argv0 = nullptr;
 
@@ -74,8 +74,8 @@ static void help(){
         , argv0,
         LisaDeskbridge::kRemotePortDefault, LisaDeskbridge::kLisaControllerHostDefault.data(), LisaDeskbridge::kLisaControllerPortDefault,
         LisaDeskbridge::Bridges::Generic::helpOpts,
-        LisaDeskbridge::Bridges::SQ6::helpOpts,
-        LisaDeskbridge::Bridges::SQmitm::helpOpts,
+        LisaDeskbridge::Bridges::SQ::helpOpts,
+        LisaDeskbridge::Bridges::SQMitm::helpOpts,
         argv0, argv0, argv0 // examples
     );
 }

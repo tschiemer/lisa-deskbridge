@@ -91,6 +91,13 @@ namespace LisaDeskbridge {
                 }
                 bridge->lisaControllerPort_ = i;
             }
+            if (opts.contains(kOptDeviceIP)){
+                struct sockaddr_in addr;
+                if (inet_aton(opts[kOptDeviceIP].data(), (struct in_addr*)&(addr.sin_addr.s_addr)) != 1){
+                    throw std::invalid_argument("invalid lisa controller ip");
+                }
+                bridge->deviceIp_ = opts[kOptDeviceIP];
+            }
             if (opts.contains(kOptDevicePort)){
                 int i = atoi(opts[kOptDevicePort].data());
                 if (i < 1 || 0xffff < i){

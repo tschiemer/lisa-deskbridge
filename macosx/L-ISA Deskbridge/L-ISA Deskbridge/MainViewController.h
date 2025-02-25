@@ -48,8 +48,11 @@ struct OpaqueBridge;
 // L-ISA Controller Tab
 @property (weak, nonatomic) IBOutlet NSTextField *lisaControllerIpText;
 @property (weak, nonatomic) IBOutlet NSTextField *lisaControllerPortText;
+@property (weak, nonatomic) IBOutlet NSTextField *deviceIpText;
+@property (weak, nonatomic) IBOutlet NSTextField *devicePortText;
 @property (weak, nonatomic) IBOutlet NSPopUpButton *deviceIDSelect;
 @property (weak, nonatomic) IBOutlet NSTextField *deviceNameText;
+@property (weak, nonatomic) IBOutlet NSButton *claimLevelControlCheckbox;
 
 
 // About tab
@@ -79,9 +82,11 @@ struct OpaqueBridge;
 
 - (IBAction)onLisaControllerIpChanged:(id)sender;
 - (IBAction)onLisaControllerPortChanged:(id)sender;
+- (IBAction)onDeviceIpChanged:(id)sender;
+- (IBAction)onDevicePortChanged:(id)sender;
 - (IBAction)onDeviceIDChanged:(id)sender;
 - (IBAction)onDeviceNameChanged:(id)sender;
-
+- (IBAction)onClaimLevelControlChanged:(id)sender;
 
 // About Tab
 

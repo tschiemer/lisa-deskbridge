@@ -25,3 +25,7 @@
 @interface NSTextField (ErrorIndication)
 -(void)showError:(BOOL)yesOrNo;
 @end
+
+@interface NSTextField (CopyPaste)
+- (BOOL) performKeyEquivalent:(NSEvent *) event;
+@end

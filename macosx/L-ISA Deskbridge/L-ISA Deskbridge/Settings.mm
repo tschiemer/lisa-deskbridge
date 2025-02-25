@@ -41,9 +41,11 @@ static Settings * singleton_ = nullptr;
                     @"mixer-ip": @"",
                     @"lisa-controller-ip": [NSString stringWithCString:LisaDeskbridge::kLisaControllerIpDefault encoding:NSString.defaultCStringEncoding],
                     @"lisa-controller-port": [NSString stringWithFormat:@"%d", LisaDeskbridge::kLisaControllerPortDefault],
-                    @"device-id": @"5",
+                    @"device-ip": @"127.0.0.1",
                     @"device-port": [NSString stringWithFormat:@"%d", LisaDeskbridge::kDevicePortDefault],
-                    @"device-name": @"L-ISA Deskbridge"
+                    @"device-id": @"1",
+                    @"device-name": @"L-ISA Deskbridge",
+                    @"claim-level-control": @"1"
             }
     }];
 #endif

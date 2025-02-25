@@ -435,7 +435,7 @@
                                                 <textField verticalHuggingPriority="750" fixedFrame="YES" textCompletion="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Km7-Lt-XuS">
                                                     <rect key="frame" x="167" y="186" width="140" height="21"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" refusesFirstResponder="YES" allowsUndo="NO" sendsActionOnEndEditing="YES" borderStyle="bezel" alignment="center" title="127.0.0.2" placeholderString="127.0.0.1" drawsBackground="YES" usesSingleLineMode="YES" id="cLJ-WG-E1Q">
+                                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" refusesFirstResponder="YES" allowsUndo="NO" sendsActionOnEndEditing="YES" borderStyle="bezel" alignment="center" title="127.0.0.1" placeholderString="127.0.0.1" drawsBackground="YES" usesSingleLineMode="YES" id="cLJ-WG-E1Q">
                                                         <font key="font" metaFont="system"/>
                                                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -448,8 +448,49 @@
                                                         <outlet property="nextKeyView" destination="Dvo-dg-sSA" id="oel-Qr-Eem"/>
                                                     </connections>
                                                 </textField>
+                                                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="WmO-ww-fw9">
+                                                    <rect key="frame" x="99" y="152" width="50" height="16"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                                    <textFieldCell key="cell" lineBreakMode="clipping" alignment="justified" title="Device:" id="6MQ-RT-xbb">
+                                                        <font key="font" metaFont="system"/>
+                                                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                                    </textFieldCell>
+                                                </textField>
+                                                <textField verticalHuggingPriority="750" fixedFrame="YES" textCompletion="NO" translatesAutoresizingMaskIntoConstraints="NO" id="wxq-Xc-Un6">
+                                                    <rect key="frame" x="315" y="149" width="50" height="21"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" refusesFirstResponder="YES" allowsUndo="NO" sendsActionOnEndEditing="YES" borderStyle="bezel" alignment="center" title="9000" placeholderString="8880" drawsBackground="YES" usesSingleLineMode="YES" id="hKR-9t-yvL">
+                                                        <font key="font" metaFont="system"/>
+                                                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                                        <allowedInputSourceLocales>
+                                                            <string>NSAllRomanInputSourcesLocaleIdentifier</string>
+                                                        </allowedInputSourceLocales>
+                                                    </textFieldCell>
+                                                    <connections>
+                                                        <action selector="onDevicePortChanged:" target="hZe-3S-obU" id="joL-Hc-fX1"/>
+                                                        <outlet property="nextKeyView" destination="Iom-Ro-vNk" id="heu-cb-4oB"/>
+                                                    </connections>
+                                                </textField>
+                                                <textField verticalHuggingPriority="750" fixedFrame="YES" textCompletion="NO" translatesAutoresizingMaskIntoConstraints="NO" id="QgU-8i-uLF">
+                                                    <rect key="frame" x="167" y="149" width="140" height="21"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" refusesFirstResponder="YES" allowsUndo="NO" sendsActionOnEndEditing="YES" borderStyle="bezel" alignment="center" title="127.0.0.1" placeholderString="127.0.0.1" drawsBackground="YES" usesSingleLineMode="YES" id="9bg-Oz-mOw">
+                                                        <font key="font" metaFont="system"/>
+                                                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                                                        <allowedInputSourceLocales>
+                                                            <string>NSAllRomanInputSourcesLocaleIdentifier</string>
+                                                        </allowedInputSourceLocales>
+                                                    </textFieldCell>
+                                                    <connections>
+                                                        <action selector="onDeviceIpChanged:" target="hZe-3S-obU" id="P9I-R8-qw4"/>
+                                                        <outlet property="nextKeyView" destination="wxq-Xc-Un6" id="p9o-Bb-szD"/>
+                                                    </connections>
+                                                </textField>
                                                 <textField verticalHuggingPriority="750" fixedFrame="YES" textCompletion="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Iom-Ro-vNk">
-                                                    <rect key="frame" x="167" y="120" width="140" height="21"/>
+                                                    <rect key="frame" x="167" y="92" width="140" height="21"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                     <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" refusesFirstResponder="YES" allowsUndo="NO" sendsActionOnEndEditing="YES" borderStyle="bezel" alignment="center" title="L-ISA Deskbridge" placeholderString="Funny Bunny" drawsBackground="YES" usesSingleLineMode="YES" id="2ih-0E-d8n">
                                                         <font key="font" metaFont="system"/>
@@ -465,7 +506,7 @@
                                                     </connections>
                                                 </textField>
                                                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="4Cn-YF-SHZ">
-                                                    <rect key="frame" x="63" y="125" width="88" height="16"/>
+                                                    <rect key="frame" x="63" y="95" width="88" height="16"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                     <textFieldCell key="cell" lineBreakMode="clipping" alignment="justified" title="Device Name:" id="KWN-jB-Ohk">
                                                         <font key="font" metaFont="system"/>
@@ -474,7 +515,7 @@
                                                     </textFieldCell>
                                                 </textField>
                                                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="7XS-qn-wr4">
-                                                    <rect key="frame" x="83" y="149" width="66" height="16"/>
+                                                    <rect key="frame" x="83" y="123" width="66" height="16"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                     <textFieldCell key="cell" lineBreakMode="clipping" alignment="justified" title="Device ID:" id="uaf-lL-dJm">
                                                         <font key="font" metaFont="system"/>
@@ -483,7 +524,7 @@
                                                     </textFieldCell>
                                                 </textField>
                                                 <popUpButton verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="nlG-jb-sdn">
-                                                    <rect key="frame" x="164" y="145" width="54" height="25"/>
+                                                    <rect key="frame" x="164" y="117" width="54" height="25"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                     <popUpButtonCell key="cell" type="push" title="1" bezelStyle="rounded" alignment="center" lineBreakMode="truncatingTail" state="on" borderStyle="border" tag="1" inset="2" selectedItem="SfD-a8-TWW" id="s5K-v8-l5g">
                                                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -508,13 +549,24 @@
                                                         <outlet property="nextKeyView" destination="0DG-Oc-73n" id="XpZ-bb-p9J"/>
                                                     </connections>
                                                 </popUpButton>
+                                                <box verticalHuggingPriority="750" fixedFrame="YES" boxType="separator" translatesAutoresizingMaskIntoConstraints="NO" id="mbL-Af-HSA">
+                                                    <rect key="frame" x="9" y="175" width="442" height="5"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                                </box>
+                                                <box verticalHuggingPriority="750" fixedFrame="YES" boxType="separator" translatesAutoresizingMaskIntoConstraints="NO" id="0DH-AJ-l2J">
+                                                    <rect key="frame" x="9" y="81" width="442" height="5"/>
+                                                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                                </box>
                                                 <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="iDf-Qh-nWg">
-                                                    <rect key="frame" x="165" y="79" width="142" height="18"/>
+                                                    <rect key="frame" x="165" y="58" width="142" height="18"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                     <buttonCell key="cell" type="check" title="Claim fader control" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="y8T-0C-Pnj">
                                                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                                         <font key="font" metaFont="system"/>
                                                     </buttonCell>
+                                                    <connections>
+                                                        <action selector="onClaimLevelControlChanged:" target="hZe-3S-obU" id="UAV-te-NeI"/>
+                                                    </connections>
                                                 </button>
                                             </subviews>
                                         </view>
@@ -637,9 +689,12 @@ https://github.com/RossBencina/oscpack</string>
                     </view>
                     <connections>
                         <outlet property="bridgeSelect" destination="8eP-U2-XRe" id="msF-6C-PBM"/>
+                        <outlet property="claimLevelControlCheckbox" destination="iDf-Qh-nWg" id="27h-zy-nMt"/>
                         <outlet property="debugCheckbox" destination="TAC-FC-8iF" id="FpI-6T-rr2"/>
                         <outlet property="deviceIDSelect" destination="nlG-jb-sdn" id="VV1-ca-ypr"/>
+                        <outlet property="deviceIpText" destination="QgU-8i-uLF" id="rf5-VS-FDH"/>
                         <outlet property="deviceNameText" destination="Iom-Ro-vNk" id="i0C-R5-M0s"/>
+                        <outlet property="devicePortText" destination="wxq-Xc-Un6" id="7JV-Ru-pbq"/>
                         <outlet property="findMixerIpButton" destination="PTv-ew-Wl2" id="JUy-9j-hnM"/>
                         <outlet property="lisaControllerIpText" destination="Km7-Lt-XuS" id="Q65-iW-vEI"/>
                         <outlet property="lisaControllerPortText" destination="Dvo-dg-sSA" id="rFy-aG-HR9"/>

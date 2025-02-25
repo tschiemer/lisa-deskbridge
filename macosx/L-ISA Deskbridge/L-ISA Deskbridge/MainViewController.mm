@@ -310,6 +310,33 @@ struct OpaqueBridge {
     [self settingsChanged:valid];
 }
 
+- (IBAction)onDeviceIpChanged:(id)sender {
+    BOOL valid = _deviceIpText.stringValue.length > 0 &&
+                [_deviceIpText.stringValue isValidIPAddress];
+    
+    [_deviceIpText showError:!valid];
+    
+    if (valid){
+        [Settings set:@"device-ip" value:_deviceIpText.stringValue];
+    }
+    
+    [self settingsChanged:valid];
+}
+
+- (IBAction)onDevicePortChanged:(id)sender {
+
+    BOOL valid = _devicePortText.stringValue.length > 0 &&
+                 [_devicePortText.stringValue isValidPort];
+
+    [_devicePortText showError:!valid];
+
+    if (valid){
+        [Settings set:@"device-port" value:_devicePortText.stringValue];
+    }
+
+    [self settingsChanged:valid];
+}
+
 - (IBAction)onDeviceIDChanged:(id)sender {
     [Settings set:@"device-id" value:_deviceIDSelect.titleOfSelectedItem];
 
@@ -329,6 +356,11 @@ struct OpaqueBridge {
 
 
     [self settingsChanged:valid];
+}
+
+- (IBAction)onClaimLevelControlChanged:(id)sender {
+    NSString * state = [NSString stringWithFormat:@"%d", (int)_claimLevelControlCheckbox.state];
+    [Settings set:@"claim-level-control" value:state];
 }
 
 #pragma About Tab
@@ -352,9 +384,14 @@ struct OpaqueBridge {
     _lisaControllerIpText.stringValue = [Settings get:@"lisa-controller-ip"];
     _lisaControllerPortText.stringValue = [Settings get:@"lisa-controller-port"];
 
+    _deviceIpText.stringValue = [Settings get:@"device-ip"];
+    _devicePortText.stringValue = [Settings get:@"device-port"];
     [self.deviceIDSelect selectItemWithTitle:[Settings get:@"device-id"]];
     _deviceNameText.stringValue = [Settings get:@"device-name"];
+    
+    _claimLevelControlCheckbox.state = [[Settings get:@"claim-level-control"] intValue] == 1;
 #endif
+    
 
     [self enableSettings:YES];
 
@@ -388,6 +425,14 @@ struct OpaqueBridge {
         NSLog(@"invalid lisac port");
         return NO;
     }
+    if (![[Settings get:@"device-ip"] isValidIPAddress]){
+        NSLog(@"invalid device-ip");
+        return NO;
+    }
+    if (![[Settings get:@"device-port"] isValidPort]){
+        NSLog(@"invalid device-port");
+        return NO;
+    }
     if ([[Settings get:@"device-id"] intValue] < 1 || 10 < [[Settings get:@"device-id"] intValue]){
         NSLog(@"invalid device id %d", [[Settings get:@"device-id"] intValue]);
         return NO;
@@ -415,8 +460,12 @@ struct OpaqueBridge {
     // l-isa controller tab
     _lisaControllerIpText.enabled = enabled;
     _lisaControllerPortText.enabled = enabled;
+
+    _deviceIpText.enabled = enabled;
+    _devicePortText.enabled = enabled;
     _deviceIDSelect.enabled = enabled;
     _deviceNameText.enabled = enabled;
+    _claimLevelControlCheckbox.enabled = enabled;
 
     _debugCheckbox.enabled = enabled;
 

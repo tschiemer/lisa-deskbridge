@@ -59,3 +59,44 @@
 }
 
 @end
+
+
+@implementation NSTextField (CopyPaste)
+
+- (BOOL) performKeyEquivalent:(NSEvent *) event {
+    if (event.type == NSEventTypeKeyDown &&
+        (event.modifierFlags & NSEventModifierFlagDeviceIndependentFlagsMask) == NSEventModifierFlagCommand){
+
+        if ([event.charactersIgnoringModifiers isEqualToString:@"a"]){
+            [[NSApplication sharedApplication] sendAction:@selector(selectAll:) to:nil from:self];
+            return YES;
+        }
+
+        if ([event.charactersIgnoringModifiers isEqualToString:@"x"]){
+            [[NSApplication sharedApplication] sendAction:@selector(cut:) to:nil from:self];
+            return YES;
+        }
+
+        if ([event.charactersIgnoringModifiers isEqualToString:@"c"]){
+            [[NSApplication sharedApplication] sendAction:@selector(copy:) to:nil from:self];
+            return YES;
+        }
+
+        if ([event.charactersIgnoringModifiers isEqualToString:@"v"]){
+            [[NSApplication sharedApplication] sendAction:@selector(paste:) to:nil from:self];
+            return YES;
+        }
+
+
+//        if ([event.charactersIgnoringModifiers isEqualToString:@"z"]){
+//            [[NSApplication sharedApplication] sendAction:@selector(undo) to:nil from:self];
+//            return YES;
+//        }
+    }
+
+//    NSLog(@"%@ %@ %d", event, event.charactersIgnoringModifiers, event.keyCode);
+
+    return [super performKeyEquivalent:event];
+}
+
+@end

@@ -39,6 +39,7 @@ namespace LisaDeskbridge {
             static constexpr char kOptLisaControllerIp[]    = "lisa-controller-ip";
             static constexpr char kOptLisaControllerPort[]  = "lisa-controller-port";
 
+            static constexpr char kOptDeviceIP[]            = "device-ip";
             static constexpr char kOptDevicePort[]          = "device-port";
             static constexpr char kOptDeviceID[]            = "device-id";
             static constexpr char kOptDeviceName[]          = "device-name";

@@ -3,36 +3,36 @@
 * Copyright (C) 2025  Philip Tschiemer, https://github.com/tschiemer/lisa-deskbridge
 *
 * This program is free software: you can redistribute it and/or modify
-        * it under the terms of the GNU Affero General Public License as published by
-        * the Free Software Foundation, either version 3 of the License, or
+* it under the terms of the GNU Affero General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
 * (at your option) any later version.
 *
 * This program is distributed in the hope that it will be useful,
-        * but WITHOUT ANY WARRANTY; without even the implied warranty of
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 * GNU Affero General Public License for more details.
 *
 * You should have received a copy of the GNU Affero General Public License
-        * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef LISA_DESKBRIDGE_SQ_H
-#define LISA_DESKBRIDGE_SQ_H
+#ifndef LISA_DESKBRIDGE_SQMIDI_H
+#define LISA_DESKBRIDGE_SQMIDI_H
 
-#include "Bridge.h"
+#include "../Bridge.h"
 
-#include "VirtualMidiDevice.h"
-#include "MidiClient.h"
+#include "../VirtualMidiDevice.h"
+#include "../MidiClient.h"
 
 namespace LisaDeskbridge {
     namespace Bridges {
-        class SQ : public Bridge {
+        class SQMidi : public Bridge {
 
             public:
 
-                static constexpr std::basic_string_view<char> kName = "SQ6";
+                static constexpr char kName[] = "SQ-Midi";
 
-                static constexpr std::basic_string_view<char> kSQ6MidiControlPortName = "MIDI Control 1";
+                static constexpr char kSQ6MidiControlPortName[] = "MIDI Control 1";
                 static constexpr float kDefaultRelativeStepSize = 0.0025;
 
                 static constexpr char helpOpts[] = "\tSQ6 Options:\n"
@@ -48,11 +48,11 @@ namespace LisaDeskbridge {
 
                     protected:
 
-                        SQ * sq6 = nullptr;
+                        SQMidi * sq6 = nullptr;
 
                     public:
 
-                        MixingStationDelegate(SQ &sq){
+                        MixingStationDelegate(SQMidi &sq){
                             sq6 = &sq;
                         }
 
@@ -65,11 +65,11 @@ namespace LisaDeskbridge {
 
                     protected:
 
-                        SQ * sq6 = nullptr;
+                        SQMidi * sq6 = nullptr;
 
                     public:
 
-                        SQMidiControlDelegate(SQ &sq){
+                        SQMidiControlDelegate(SQMidi &sq){
                             sq6 = &sq;
                         }
 
@@ -86,8 +86,8 @@ namespace LisaDeskbridge {
                 MixingStationDelegate mixingStationDelegate;
                 LisaDeskbridge::VirtualMidiDevice mixingStationVirtualMidiDevice;
 
-                std::basic_string_view<char> midiInPortName = kSQ6MidiControlPortName;
-                std::basic_string_view<char> midiOutPortName = kSQ6MidiControlPortName;
+                std::string midiInPortName = kSQ6MidiControlPortName;
+                std::string midiOutPortName = kSQ6MidiControlPortName;
 
                 SQMidiControlDelegate sqMidiControlDelegate;
                 MidiClient sqMidiControlClient;
@@ -100,10 +100,12 @@ namespace LisaDeskbridge {
 
             public: // Controller interface
 
-                SQ(BridgeOpts &opts);
+                SQMidi(BridgeOpts &opts);
 
-                bool init();
-                void deinit();
+            protected:
+
+                bool startImpl();
+                void stopImpl();
 
             protected:  // Controller logic
 
@@ -127,4 +129,4 @@ namespace LisaDeskbridge {
 
 
 
-#endif //LISA_DESKBRIDGE_SQ_H
+#endif //LISA_DESKBRIDGE_SQMIDI_H

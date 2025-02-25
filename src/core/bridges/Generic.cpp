@@ -3,17 +3,17 @@
 * Copyright (C) 2025  Philip Tschiemer, https://github.com/tschiemer/lisa-deskbridge
 *
 * This program is free software: you can redistribute it and/or modify
-        * it under the terms of the GNU Affero General Public License as published by
-        * the Free Software Foundation, either version 3 of the License, or
+* it under the terms of the GNU Affero General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
 * (at your option) any later version.
 *
 * This program is distributed in the hope that it will be useful,
-        * but WITHOUT ANY WARRANTY; without even the implied warranty of
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 * GNU Affero General Public License for more details.
 *
 * You should have received a copy of the GNU Affero General Public License
-        * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "bridges/Generic.h"
@@ -57,8 +57,9 @@ namespace LisaDeskbridge {
         }
 
         bool Generic::startMidiClient() {
-            if (midiInPortName.length() == 0 && midiOutPortName == 0){
+            if (midiInPortName.length() == 0){
 //                error("No midi in- or out-port defined!");
+                log(LogLevelInfo, "Not using MIDI Client." );
                 return true;
             }
 
@@ -74,7 +75,7 @@ namespace LisaDeskbridge {
         }
 
         void Generic::stopMidiClient() {
-            if (midiInPortName.length() == 0 && midiOutPortName == 0){
+            if (midiInPortName.length() == 0){
                 return;
             }
 
@@ -82,51 +83,25 @@ namespace LisaDeskbridge {
             midiClient.stop();
         }
 
-        bool Generic::init() {
-
-            if (state == State_Started){
-                return true;
-            }
-
-            state = State_Starting;
-
-            if (Bridge::init() == false){
-                state = State_Stopped;
-                return false;
-            }
+        bool Generic::startImpl() {
 
             if (startVirtualMidiDevice() == false){
-                Bridge::deinit();
-                state = State_Stopped;
                 return false;
             }
 
             if (startMidiClient() == false){
                 stopVirtualMidiDevice();
-                Bridge::deinit();
-                state = State_Stopped;
                 return false;
             }
-
-            state = State_Started;
 
             return true;
         }
 
-        void Generic::deinit() {
-
-            if (state != State_Started){
-                return;
-            }
-
-            state = State_Stopping;
+        void Generic::stopImpl() {
 
             stopMidiClient();
             stopVirtualMidiDevice();
 
-            Bridge::deinit();
-
-            state = State_Stopped;
         }
 
         void Generic::selectedChannelAction(int i){
@@ -159,14 +134,14 @@ namespace LisaDeskbridge {
                     return;
                 }
 
-                lisaControllerProxy.selectGroup(note);
+                lisaControllerProxy_.selectGroup(note);
             }
             else if (channel == 3){ // Fire snapshot
                 if (!isValidSnapshotId(note)){
                     return;
                 }
 
-                lisaControllerProxy.fireSnapshot(note);
+                lisaControllerProxy_.fireSnapshot(note);
             }
             else if (channel == 4){ // L-ISA Controller Options
 
@@ -198,19 +173,19 @@ namespace LisaDeskbridge {
             }
             else if (channel == 2){ // faders
                 if (cc == 1){
-                    lisaControllerProxy.setMasterFaderPos((float)value / 127.0);
+                    lisaControllerProxy_.setMasterFaderPos((float)value / 127.0);
                 }
                 else if (cc == 2){
-                    lisaControllerProxy.setReverbFaderPos((float)value / 127.0);
+                    lisaControllerProxy_.setReverbFaderPos((float)value / 127.0);
                 }
                 else if (cc == 3){
-                    lisaControllerProxy.setMonitorFaderPos((float)value / 127.0);
+                    lisaControllerProxy_.setMonitorFaderPos((float)value / 127.0);
                 }
                 else if (cc == 4){
-                    lisaControllerProxy.setUserFaderNPos(1,(float)value / 127.0);
+                    lisaControllerProxy_.setUserFaderNPos(1, (float)value / 127.0);
                 }
                 else if (cc == 5){
-                    lisaControllerProxy.setUserFaderNPos(2,(float)value / 127.0);
+                    lisaControllerProxy_.setUserFaderNPos(2, (float)value / 127.0);
                 }
             }
 

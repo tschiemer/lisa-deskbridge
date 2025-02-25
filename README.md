@@ -159,7 +159,7 @@ The effect of the buttons in combination with channel selects is as follows:
 
 Copyright (C) 2025 Philip Tschiemer
 
-GNU Affero General Public License v3
+[GNU Affero General Public License v3](LICENSE)
 
 ## Third Party
 

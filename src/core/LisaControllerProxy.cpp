@@ -3,17 +3,17 @@
 * Copyright (C) 2025  Philip Tschiemer, https://github.com/tschiemer/lisa-deskbridge
 *
 * This program is free software: you can redistribute it and/or modify
-        * it under the terms of the GNU Affero General Public License as published by
-        * the Free Software Foundation, either version 3 of the License, or
+* it under the terms of the GNU Affero General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
 * (at your option) any later version.
 *
 * This program is distributed in the hope that it will be useful,
-        * but WITHOUT ANY WARRANTY; without even the implied warranty of
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 * GNU Affero General Public License for more details.
 *
 * You should have received a copy of the GNU Affero General Public License
-        * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <iostream>
@@ -33,17 +33,22 @@
 
 namespace LisaDeskbridge {
 
-    void LisaControllerProxy::start(unsigned short listenPort, std::basic_string_view<char> & controllerAddress, unsigned short controllerPort){
+    void LisaControllerProxy::start(unsigned short listenPort, std::string & controllerAddress, unsigned short controllerPort){
                 if (mIsRunning){
             return;
         }
 
         log(LogLevelInfo, "Listening for L-ISA Controller messages on port %d", listenPort);
 
-        udpListeningReceiveSocket = new UdpListeningReceiveSocket(
-                IpEndpointName( IpEndpointName::ANY_ADDRESS, listenPort),
-                this
-                );
+//        try {
+            udpListeningReceiveSocket = new UdpListeningReceiveSocket(
+                    IpEndpointName( IpEndpointName::ANY_ADDRESS, listenPort),
+                    this
+            );
+//        } catch (std::exception &e){
+////            logError("Could not create UDP receive socket");
+////            throw e;
+//        }
 
         thread = new std::thread([](UdpListeningReceiveSocket * socket){
             socket->Run();

@@ -3,12 +3,12 @@
 * Copyright (C) 2025  Philip Tschiemer
 *
 * This program is free software: you can redistribute it and/or modify
-        * it under the terms of the GNU Affero General Public License as published by
-        * the Free Software Foundation, either version 3 of the License, or
+* it under the terms of the GNU Affero General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
 * (at your option) any later version.
 *
 * This program is distributed in the hope that it will be useful,
-        * but WITHOUT ANY WARRANTY; without even the implied warranty of
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 * GNU Affero General Public License for more details.
 *
@@ -29,128 +29,85 @@ namespace LisaDeskbridge {
 
         SQMitm::SQMitm(BridgeOpts &opts) :
                 Bridge(opts){
-
             if (opts.contains("mixer-ip")){
                 mixerIp_ = opts["mixer-ip"];
                 //TODO validate
+//                printf("mixer ip = %s\n", mixerIp_.data());
             }
-            else if (opts.contains("mitm-name")){
+            else {
+                throw std::invalid_argument("Missing option 'mixer-ip'");
+            }
+
+            if (opts.contains("mitm-name")){
                 mitmName_ = opts["mitm-name"];
             }
         }
 
 
-        bool SQMitm::init() {
+        void SQMitm::initMitm() {
 
-            if (state == State_Started){
-                return true;
-            }
+            static bool initializedOnce = false;
 
-            state = State_Starting;
-
-            if (Bridge::init() == false){
-                state = State_Stopped;
-                return false;
-            }
-
-            if (initMitm() == false){
-                state = State_Stopped;
-                return false;
-            }
-
-            state = State_Started;
-
-            return true;
-        }
-
-        void SQMitm::deinit() {
-
-            if (state != State_Started){
+            if (initializedOnce){
                 return;
             }
+            initializedOnce = true;
 
-            state = State_Stopping;
+            mitm_.onConnectionStateChanged([&](SQMixMitm::MixMitm::ConnectionState state, SQMixMitm::Version &version){
+                if (state == SQMixMitm::MixMitm::Connected) {
 
-            log(LogLevelInfo, "Stopping SQ Discovery Responder..");
-            discoveryResponder_.stop();
+                    log(LogLevelInfo,"Connected to mixer (firmware %d.%d.%d r%d)\n",
+                        version.major(), version.minor(), version.patch(), version.build());
+                } else {
 
-            log(LogLevelInfo, "Stopping SQ MITM Service..");
-            mitm_.stop();
+                }
+            });
 
-            Bridge::deinit();
+            mitm_.onEvent(SQMixMitm::Event::Type::ChannelSelect, [&](SQMixMitm::Event &event){
 
-            state = State_Stopped;
-        }
+                log(LogLevelDebug, "event ChannelSelect %d", event.ChannelSelect_channel());
 
+                if (mitm_.connectionState() != SQMixMitm::MixMitm::Connected || mitm_.state() != SQMixMitm::MixMitm::Running){
+                    return;
+                }
 
-        bool SQMitm::initMitm(){
+                onSelectedChannel(event.ChannelSelect_channel());
+            });
 
-//            mitm_.onConnectionStateChanged([&](SQMixMitm::MixMitm::ConnectionState state){
-//                if (state == SQMixMitm::MixMitm::Connected){
-//
-//                }
-//            });
+            mitm_.onEvent(SQMixMitm::Event::Type::MidiSoftRotary, [&](SQMixMitm::Event &event){
 
-            static bool initializeCallbacksOnce = true;
-            
-            if (initializeCallbacksOnce){
-                initializeCallbacksOnce = false;
+                log(LogLevelDebug, "event MidiSoftRotary", event.ChannelSelect_channel());
 
-                mitm_.onConnectionStateChanged([&](SQMixMitm::MixMitm::ConnectionState state, SQMixMitm::Version &version){
-                    if (state == SQMixMitm::MixMitm::Connected) {
+                if (mitm_.connectionState() != SQMixMitm::MixMitm::Connected || mitm_.state() != SQMixMitm::MixMitm::Running){
+                    return;
+                }
 
-                        log(LogLevelInfo,"Connected to mixer (firmware %d.%d.%d r%d)\n",
-                                version.major(), version.minor(), version.patch(), version.build());
-                    } else {
+                onMidiEvent(event.MidiSoftKey_channel(), event.MidiSoftRotary_type(),
+                            event.MidiSoftRotary_value1(), event.MidiSoftRotary_value2());
+            });
 
-                    }
-                });
+            mitm_.onEvent(SQMixMitm::Event::Type::MidiSoftKey, [&](SQMixMitm::Event &event){
 
-                mitm_.onEvent(SQMixMitm::Event::Type::ChannelSelect, [&](SQMixMitm::Event &event){
+                log(LogLevelDebug, "event MidiSoftKey", event.ChannelSelect_channel());
 
-                    log(LogLevelDebug, "event ChannelSelect %d", event.ChannelSelect_channel());
+                if (mitm_.connectionState() != SQMixMitm::MixMitm::Connected || mitm_.state() != SQMixMitm::MixMitm::Running){
+                    return;
+                }
 
-                    if (mitm_.connectionState() != SQMixMitm::MixMitm::Connected || mitm_.state() != SQMixMitm::MixMitm::Running){
-                        return;
-                    }
+                onMidiEvent(event.MidiSoftKey_channel(), event.MidiSoftKey_type(), event.MidiSoftKey_value1(),
+                            event.MidiSoftKey_value2());
+            });
 
-                    onSelectedChannel(event.ChannelSelect_channel());
-                });
+            mitm_.onEvent(SQMixMitm::Event::Type::MidiFaderLevel, [&](SQMixMitm::Event &event){
 
-                mitm_.onEvent(SQMixMitm::Event::Type::MidiSoftRotary, [&](SQMixMitm::Event &event){
+                log(LogLevelDebug, "event MidiFaderLevel ch %d %d", event.MidiFaderLevel_channel(), event.MidiFaderLevel_value());
 
-                    log(LogLevelDebug, "event MidiSoftRotary", event.ChannelSelect_channel());
+                if (mitm_.connectionState() != SQMixMitm::MixMitm::Connected || mitm_.state() != SQMixMitm::MixMitm::Running){
+                    return;
+                }
 
-                    if (mitm_.connectionState() != SQMixMitm::MixMitm::Connected || mitm_.state() != SQMixMitm::MixMitm::Running){
-                        return;
-                    }
-
-                    onMidiEvent(event.MidiSoftKey_channel(), event.MidiSoftRotary_type(),
-                                event.MidiSoftRotary_value1(), event.MidiSoftRotary_value2());
-                });
-
-                mitm_.onEvent(SQMixMitm::Event::Type::MidiSoftKey, [&](SQMixMitm::Event &event){
-
-                    log(LogLevelDebug, "event MidiSoftKey", event.ChannelSelect_channel());
-
-                    if (mitm_.connectionState() != SQMixMitm::MixMitm::Connected || mitm_.state() != SQMixMitm::MixMitm::Running){
-                        return;
-                    }
-
-                    onMidiEvent(event.MidiSoftKey_channel(), event.MidiSoftKey_type(), event.MidiSoftKey_value1(),
-                                event.MidiSoftKey_value2());
-                });
-
-                mitm_.onEvent(SQMixMitm::Event::Type::MidiFaderLevel, [&](SQMixMitm::Event &event){
-
-                    log(LogLevelDebug, "event MidiFaderLevel ch %d %d", event.MidiFaderLevel_channel(), event.MidiFaderLevel_value());
-
-                    if (mitm_.connectionState() != SQMixMitm::MixMitm::Connected || mitm_.state() != SQMixMitm::MixMitm::Running){
-                        return;
-                    }
-
-                    onMidiFaderLevel(event.MidiFaderLevel_channel(), event.MidiFaderLevel_value());
-                });
+                onMidiFaderLevel(event.MidiFaderLevel_channel(), event.MidiFaderLevel_value());
+            });
 
 //                mitm_.onEvent(SQMixMitm::Event::Types::MidiFaderMute, [&](SQMixMitm::Event &event){
 //
@@ -163,7 +120,11 @@ namespace LisaDeskbridge {
 //                    onMidiFaderLevel(event.MidiFaderMute_channel(), event.MidiFaderLevel_value());
 //                });
 
-            }
+        }
+
+        bool SQMitm::startImpl(){
+
+            initMitm();
 
             log(LogLevelInfo, "Starting SQ MITM Service for mixer at %s", mixerIp_.data());
 
@@ -180,8 +141,22 @@ namespace LisaDeskbridge {
                 return false;
             }
 
+
+            enableLisaControllerSendingToSelf(true);
+            enableLisaControllerReceivingFromSelf(true);
+
             return true;
         }
+
+
+    void SQMitm::stopImpl() {
+
+        log(LogLevelInfo, "Stopping SQ Discovery Responder..");
+        discoveryResponder_.stop();
+
+        log(LogLevelInfo, "Stopping SQ MITM Service..");
+        mitm_.stop();
+    }
 
         void SQMitm::onSelectedChannel(int channel){
 
@@ -192,30 +167,30 @@ namespace LisaDeskbridge {
                 softBtn2_ == Released &&
                 softBtn3_ == Released &&
                 softBtn4_ == Released){
-                lisaControllerProxy.selectSource(channel);
+                lisaControllerProxy_.selectSource(channel);
             }
             else if (softBtn1_ == Released &&
                      softBtn2_ == Pressed &&
                      softBtn3_ == Released){
                 if (softBtn4_ == Released){
-                    lisaControllerProxy.addSourceToSelection(channel);
+                    lisaControllerProxy_.addSourceToSelection(channel);
                 } else {
-                    lisaControllerProxy.removeSourceFromSelection(channel);
+                    lisaControllerProxy_.removeSourceFromSelection(channel);
                 }
             }
             else if (softBtn1_ == Released &&
                      softBtn2_ == Released &&
                      softBtn3_ == Pressed &&
                      softBtn4_ == Released){
-                lisaControllerProxy.snapSourceToSpeaker(channel);
+                lisaControllerProxy_.snapSourceToSpeaker(channel);
             }
             else if (softBtn1_ == Released &&
                      softBtn3_ == Pressed &&
                      softBtn4_ == Pressed){
                 if (softBtn2_ == Released){
-                    lisaControllerProxy.setSourceSolo(channel, true);
+                    lisaControllerProxy_.setSourceSolo(channel, true);
                 } else {
-                    lisaControllerProxy.setSourceSolo(channel, false);
+                    lisaControllerProxy_.setSourceSolo(channel, false);
                 }
             }
         }
@@ -273,14 +248,14 @@ namespace LisaDeskbridge {
                     return;
                 }
 
-                lisaControllerProxy.selectGroup(note);
+                lisaControllerProxy_.selectGroup(note);
             }
             else if (channel == 3){ // Fire snapshot
                 if (!isValidSnapshotId(note)){
                     return;
                 }
 
-                lisaControllerProxy.fireSnapshot(note);
+                lisaControllerProxy_.fireSnapshot(note);
             }
             else if (channel == 4){
             } // channel == 3
@@ -315,55 +290,55 @@ namespace LisaDeskbridge {
                     float r = (float)i * kDefaultRelativeStepSize;
                     if (cc == 1){
                         if (softBtn4_ == Released) {
-                            lisaControllerProxy.setSelectedSourcesRelativePan(r);
+                            lisaControllerProxy_.setSelectedSourcesRelativePan(r);
                         } else {
                             // do nothing
                         }
                     } else if (cc == 2){
                         if (softBtn4_ == Released) {
-                            lisaControllerProxy.setSelectedSourcesRelativePanSpread(r);
+                            lisaControllerProxy_.setSelectedSourcesRelativePanSpread(r);
                         } else {
-                            lisaControllerProxy.setSelectedSourcesRelativeWidth(r);
+                            lisaControllerProxy_.setSelectedSourcesRelativeWidth(r);
                         }
                     } else if (cc == 3){
                         if (softBtn4_ == Released) {
-                            lisaControllerProxy.setSelectedSourcesRelativeDistance(r);
+                            lisaControllerProxy_.setSelectedSourcesRelativeDistance(r);
                         } else {
                         }
                     } else if (cc == 4){
                         if (softBtn4_ == Released) {
-                            lisaControllerProxy.setSelectedSourcesRelativeElevation(r);
+                            lisaControllerProxy_.setSelectedSourcesRelativeElevation(r);
                         } else {
-                            lisaControllerProxy.setSelectedSourceRelativeAuxSend(r);
+                            lisaControllerProxy_.setSelectedSourceRelativeAuxSend(r);
                         }
                     } else if (cc == 5){
                         // not used
                     } else if (cc == 6){
                         if (softBtn4_ == Released) {
-                            lisaControllerProxy.setSelectedSourcesRelativeWidth(r);
+                            lisaControllerProxy_.setSelectedSourcesRelativeWidth(r);
                         } else if (cc == 7){
                             // not used
                         }
                     } else if (cc == 8){
-                        lisaControllerProxy.setSelectedSourceRelativeAuxSend(r);
+                        lisaControllerProxy_.setSelectedSourceRelativeAuxSend(r);
                     }
                 }
             } // channel == 1
             else if (channel == 2){
                 if (cc == 0){
-                    lisaControllerProxy.setMasterFaderPos((float)value / 127.0);
+                    lisaControllerProxy_.setMasterFaderPos((float)value / 127.0);
                 }
                 else if (cc == 1){
-                    lisaControllerProxy.setReverbFaderPos((float)value / 127.0);
+                    lisaControllerProxy_.setReverbFaderPos((float)value / 127.0);
                 }
                 else if (cc == 2){
-                    lisaControllerProxy.setMonitorFaderPos((float)value / 127.0);
+                    lisaControllerProxy_.setMonitorFaderPos((float)value / 127.0);
                 }
                 else if (cc == 3){
-                    lisaControllerProxy.setUserFaderNPos(1,(float)value / 127.0);
+                    lisaControllerProxy_.setUserFaderNPos(1, (float)value / 127.0);
                 }
                 else if (cc == 4){
-                    lisaControllerProxy.setUserFaderNPos(2,(float)value / 127.0);
+                    lisaControllerProxy_.setUserFaderNPos(2, (float)value / 127.0);
                 }
             } // channel == 2
         }
@@ -379,19 +354,19 @@ namespace LisaDeskbridge {
             channel += 1;
 
             if (channel == 1){
-                lisaControllerProxy.setMasterFaderPos((float)value / 255.0);
+                lisaControllerProxy_.setMasterFaderPos((float)value / 255.0);
             }
             else if (channel == 2){
-                lisaControllerProxy.setReverbFaderPos((float)value / 255.0);
+                lisaControllerProxy_.setReverbFaderPos((float)value / 255.0);
             }
             else if (channel == 3){
-                lisaControllerProxy.setMonitorFaderPos((float)value / 255.0);
+                lisaControllerProxy_.setMonitorFaderPos((float)value / 255.0);
             }
             else if (channel == 4){
-                lisaControllerProxy.setUserFaderNPos(1,(float)value / 255.0);
+                lisaControllerProxy_.setUserFaderNPos(1, (float)value / 255.0);
             }
             else if (channel == 5){
-                lisaControllerProxy.setUserFaderNPos(2,(float)value / 255.0);
+                lisaControllerProxy_.setUserFaderNPos(2, (float)value / 255.0);
             }
         }
 

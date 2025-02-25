@@ -3,12 +3,12 @@
 * Copyright (C) 2025  Philip Tschiemer
 *
 * This program is free software: you can redistribute it and/or modify
-        * it under the terms of the GNU Affero General Public License as published by
-        * the Free Software Foundation, either version 3 of the License, or
+* it under the terms of the GNU Affero General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
 * (at your option) any later version.
 *
 * This program is distributed in the hope that it will be useful,
-        * but WITHOUT ANY WARRANTY; without even the implied warranty of
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 * GNU Affero General Public License for more details.
 *
@@ -20,7 +20,7 @@
 #define LISA_DESKBRIDGE_SQMITM_H
 
 
-#include "Bridge.h"
+#include "../Bridge.h"
 #include "sqmixmitm/DiscoveryResponder.h"
 #include "sqmixmitm/MixMitm.h"
 
@@ -31,7 +31,7 @@ namespace LisaDeskbridge {
 
         public:
 
-            static constexpr std::basic_string_view<char> kName = "SQmitm";
+            static constexpr char kName[] = "SQ-Mitm";
 
             static constexpr float kDefaultRelativeStepSize = 0.0025;
 
@@ -65,12 +65,13 @@ namespace LisaDeskbridge {
 
             SQMitm(BridgeOpts &opts);
 
-            bool init();
-//            void stop();
-            void deinit();
+        protected:
+            void initMitm();
 
-            bool initMitm();
-//            void deinitMitm();
+            bool startImpl();
+            void stopImpl();
+
+        public:
 
             void onSelectedChannel(int channel);
 

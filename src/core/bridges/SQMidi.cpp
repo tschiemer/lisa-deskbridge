@@ -3,20 +3,20 @@
 * Copyright (C) 2025  Philip Tschiemer, https://github.com/tschiemer/lisa-deskbridge
 *
 * This program is free software: you can redistribute it and/or modify
-        * it under the terms of the GNU Affero General Public License as published by
-        * the Free Software Foundation, either version 3 of the License, or
+* it under the terms of the GNU Affero General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
 * (at your option) any later version.
 *
 * This program is distributed in the hope that it will be useful,
-        * but WITHOUT ANY WARRANTY; without even the implied warranty of
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 * GNU Affero General Public License for more details.
 *
 * You should have received a copy of the GNU Affero General Public License
-        * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+* along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "bridges/SQ.h"
+#include "bridges/SQMidi.h"
 
 #include <iostream>
 
@@ -26,7 +26,7 @@ namespace LisaDeskbridge {
     namespace Bridges {
 
 
-        SQ::SQ(BridgeOpts &opts) :
+        SQMidi::SQMidi(BridgeOpts &opts) :
             Bridge(opts),
             mixingStationDelegate(*this), mixingStationVirtualMidiDevice(mixingStationDelegate),
             sqMidiControlDelegate(*this), sqMidiControlClient(sqMidiControlDelegate){
@@ -39,7 +39,7 @@ namespace LisaDeskbridge {
             }
         }
 
-        bool SQ::startMixingStationVirtualMidiDevice(){
+        bool SQMidi::startMixingStationVirtualMidiDevice(){
             log(LogLevelInfo, "Starting virtual MIDI Device '%s' for channel selection ..",VirtualMidiDevice::kDefaultPortName );
 
             try {
@@ -52,13 +52,13 @@ namespace LisaDeskbridge {
             return true;
         }
 
-        void SQ::stopMixingStationVirtualMidiDevice(){
+        void SQMidi::stopMixingStationVirtualMidiDevice(){
             log(LogLevelInfo, "Stopping virtual MIDI Device for channel selection ..");
 
             mixingStationVirtualMidiDevice.stop();
         }
 
-        bool SQ::startSQMidiControlClient() {
+        bool SQMidi::startSQMidiControlClient() {
             log(LogLevelInfo, "Starting MIDI Client..");
 
             try {
@@ -71,60 +71,37 @@ namespace LisaDeskbridge {
             return true;
         }
 
-        void SQ::stopSQMidiControlClient() {
+        void SQMidi::stopSQMidiControlClient() {
             log(LogLevelInfo, "Stopping MIDI Client..");
 
             sqMidiControlClient.stop();
         }
 
-        bool SQ::init() {
-
-            if (state == State_Started){
-                return true;
-            }
-
-            state = State_Starting;
-
-            if (Bridge::init() == false){
-                state = State_Stopped;
-                return false;
-            }
+        bool SQMidi::startImpl() {
 
             if (startMixingStationVirtualMidiDevice() == false){
-                stopLisaControllerProxy();
-                state = State_Stopped;
                 return false;
             }
 
             if (startSQMidiControlClient() == false){
                 stopMixingStationVirtualMidiDevice();
-                stopLisaControllerProxy();
-                state = State_Stopped;
                 return false;
             }
 
-            state = State_Started;
+            enableLisaControllerSendingToSelf(true);
+            enableLisaControllerReceivingFromSelf(true);
 
             return true;
         }
 
-        void SQ::deinit() {
-
-            if (state != State_Started){
-                return;
-            }
-
-            state = State_Stopping;
+        void SQMidi::stopImpl() {
 
             stopSQMidiControlClient();
             stopMixingStationVirtualMidiDevice();
 
-            Bridge::deinit();
-
-            state = State_Stopped;
         }
 
-        void SQ::MixingStationDelegate::receivedNoteOn(int channel, int note, int velocity){
+        void SQMidi::MixingStationDelegate::receivedNoteOn(int channel, int note, int velocity){
             // only process if completely started
             if (sq6->state != State_Started){
                 return;
@@ -159,30 +136,30 @@ namespace LisaDeskbridge {
                     sq6->softBtn2 == ButtonState_Released &&
                     sq6->softBtn3 == ButtonState_Released &&
                     sq6->softBtn4 == ButtonState_Released){
-                        sq6->lisaControllerProxy.selectSource(note);
+                        sq6->lisaControllerProxy_.selectSource(note);
                 }
                 else if (sq6->softBtn1 == ButtonState_Released &&
                          sq6->softBtn2 == ButtonState_Pressed &&
                          sq6->softBtn3 == ButtonState_Released){
                     if (sq6->softBtn4 == ButtonState_Released){
-                        sq6->lisaControllerProxy.addSourceToSelection(note);
+                        sq6->lisaControllerProxy_.addSourceToSelection(note);
                     } else {
-                        sq6->lisaControllerProxy.removeSourceFromSelection(note);
+                        sq6->lisaControllerProxy_.removeSourceFromSelection(note);
                     }
                 }
                 else if (sq6->softBtn1 == ButtonState_Released &&
                          sq6->softBtn2 == ButtonState_Released &&
                          sq6->softBtn3 == ButtonState_Pressed &&
                          sq6->softBtn4 == ButtonState_Released){
-                    sq6->lisaControllerProxy.snapSourceToSpeaker(note);
+                    sq6->lisaControllerProxy_.snapSourceToSpeaker(note);
                 }
                 else if (sq6->softBtn1 == ButtonState_Released &&
                          sq6->softBtn3 == ButtonState_Pressed &&
                          sq6->softBtn4 == ButtonState_Pressed){
                     if (sq6->softBtn2 == ButtonState_Released){
-                        sq6->lisaControllerProxy.setSourceSolo(note, true);
+                        sq6->lisaControllerProxy_.setSourceSolo(note, true);
                     } else {
-                        sq6->lisaControllerProxy.setSourceSolo(note, false);
+                        sq6->lisaControllerProxy_.setSourceSolo(note, false);
                     }
                 }
 
@@ -190,7 +167,7 @@ namespace LisaDeskbridge {
         }
 
 
-        void SQ::SQMidiControlDelegate::receivedNoteOn(int channel, int note, int velocity){
+        void SQMidi::SQMidiControlDelegate::receivedNoteOn(int channel, int note, int velocity){
             // only process if completely started
             if (sq6->state != State_Started){
                 return;
@@ -217,31 +194,31 @@ namespace LisaDeskbridge {
                 sq6->softBtn4 = ButtonState_Pressed;
             }
             else if (channel == 2 && isValidGroupId(note)){
-                sq6->lisaControllerProxy.selectGroup(note);
+                sq6->lisaControllerProxy_.selectGroup(note);
             }
             else if (channel == 3 && isValidSnapshotId(note)){
-                sq6->lisaControllerProxy.fireSnapshot(note);
+                sq6->lisaControllerProxy_.fireSnapshot(note);
             }
             else if (channel == 4){
                 if (note == 1){
-                    sq6->lisaControllerProxy.setAllSourcesControlByOSC();
+                    sq6->lisaControllerProxy_.setAllSourcesControlByOSC();
                 }
                 else if (note == 2){
-                    sq6->lisaControllerProxy.setAllSourcesControlBySnapshots();
+                    sq6->lisaControllerProxy_.setAllSourcesControlBySnapshots();
                 }
                 else if (note == 11){
-                    sq6->lisaControllerProxy.firePreviousSnapshot();
+                    sq6->lisaControllerProxy_.firePreviousSnapshot();
                 }
                 else if (note == 12){
-                    sq6->lisaControllerProxy.refireCurrentSnapshot();
+                    sq6->lisaControllerProxy_.refireCurrentSnapshot();
                 }
                 else if (note == 13){
-                    sq6->lisaControllerProxy.fireNextSnapshot();
+                    sq6->lisaControllerProxy_.fireNextSnapshot();
                 }
             } // channel == 3
 
         }
-        void SQ::SQMidiControlDelegate::receivedNoteOff(int channel, int note, int velocity){
+        void SQMidi::SQMidiControlDelegate::receivedNoteOff(int channel, int note, int velocity){
             // only process if completely started
             if (sq6->state != State_Started){
                 return;
@@ -262,7 +239,7 @@ namespace LisaDeskbridge {
                 sq6->softBtn4 = ButtonState_Released;
             }
         }
-        void SQ::SQMidiControlDelegate::receivedControlChange(int channel, int cc, int value){
+        void SQMidi::SQMidiControlDelegate::receivedControlChange(int channel, int cc, int value){
             // only process if completely started
             if (sq6->state != State_Started){
                 return;
@@ -277,59 +254,59 @@ namespace LisaDeskbridge {
                     float r = (float)i * kDefaultRelativeStepSize;
                     if (cc == 1){
                         if (sq6->softBtn4 == ButtonState_Released) {
-                            sq6->lisaControllerProxy.setSelectedSourcesRelativePan(r);
+                            sq6->lisaControllerProxy_.setSelectedSourcesRelativePan(r);
                         } else {
                             // do nothing
                         }
                     } else if (cc == 2){
                         if (sq6->softBtn4 == ButtonState_Released) {
-                            sq6->lisaControllerProxy.setSelectedSourcesRelativePanSpread(r);
+                            sq6->lisaControllerProxy_.setSelectedSourcesRelativePanSpread(r);
                         } else {
-                            sq6->lisaControllerProxy.setSelectedSourcesRelativeWidth(r);
+                            sq6->lisaControllerProxy_.setSelectedSourcesRelativeWidth(r);
                         }
                     } else if (cc == 3){
                         if (sq6->softBtn4 == ButtonState_Released) {
-                            sq6->lisaControllerProxy.setSelectedSourcesRelativeDistance(r);
+                            sq6->lisaControllerProxy_.setSelectedSourcesRelativeDistance(r);
                         } else {
                         }
                     } else if (cc == 4){
                         if (sq6->softBtn4 == ButtonState_Released) {
-                            sq6->lisaControllerProxy.setSelectedSourcesRelativeElevation(r);
+                            sq6->lisaControllerProxy_.setSelectedSourcesRelativeElevation(r);
                         } else {
-                            sq6->lisaControllerProxy.setSelectedSourceRelativeAuxSend(r);
+                            sq6->lisaControllerProxy_.setSelectedSourceRelativeAuxSend(r);
                         }
                     } else if (cc == 5){
                         // not used
                     } else if (cc == 6){
                         if (sq6->softBtn4 == ButtonState_Released) {
-                            sq6->lisaControllerProxy.setSelectedSourcesRelativeWidth(r);
+                            sq6->lisaControllerProxy_.setSelectedSourcesRelativeWidth(r);
                     } else if (cc == 7){
                             // not used
                         }
                     } else if (cc == 8){
-                        sq6->lisaControllerProxy.setSelectedSourceRelativeAuxSend(r);
+                        sq6->lisaControllerProxy_.setSelectedSourceRelativeAuxSend(r);
                     }
                 }
             } // channel == 1
             else if (channel == 2){
                 if (cc == 0){
-                    sq6->lisaControllerProxy.setMasterFaderPos((float)value / 127.0);
+                    sq6->lisaControllerProxy_.setMasterFaderPos((float)value / 127.0);
                 }
                 else if (cc == 1){
-                    sq6->lisaControllerProxy.setReverbFaderPos((float)value / 127.0);
+                    sq6->lisaControllerProxy_.setReverbFaderPos((float)value / 127.0);
                 }
                 else if (cc == 2){
-                    sq6->lisaControllerProxy.setMonitorFaderPos((float)value / 127.0);
+                    sq6->lisaControllerProxy_.setMonitorFaderPos((float)value / 127.0);
                 }
                 else if (cc == 3){
-                    sq6->lisaControllerProxy.setUserFaderNPos(1,(float)value / 127.0);
+                    sq6->lisaControllerProxy_.setUserFaderNPos(1, (float)value / 127.0);
                 }
                 else if (cc == 4){
-                    sq6->lisaControllerProxy.setUserFaderNPos(2,(float)value / 127.0);
+                    sq6->lisaControllerProxy_.setUserFaderNPos(2, (float)value / 127.0);
                 }
             } // channel == 2
         }
-        void SQ::SQMidiControlDelegate::receivedProgramChange(int channel, int program){
+        void SQMidi::SQMidiControlDelegate::receivedProgramChange(int channel, int program){
             // only process if completely started
             if (sq6->state != State_Started){
                 return;
@@ -339,12 +316,12 @@ namespace LisaDeskbridge {
 
             if (channel == 1){
                 if (isValidSnapshotId(program)){
-                    sq6->lisaControllerProxy.fireSnapshot(program);
+                    sq6->lisaControllerProxy_.fireSnapshot(program);
                 }
             }
         }
 
-        void SQ::receivedMasterFaderPos(float pos){
+        void SQMidi::receivedMasterFaderPos(float pos){
             // only process if completely started
             if (state != State_Started){
                 return;
@@ -353,7 +330,7 @@ namespace LisaDeskbridge {
             sqMidiControlClient.sendControlChange(1,0,(int)(127.0 * pos));
         }
 
-        void SQ::receivedReverbFaderPos(float pos){
+        void SQMidi::receivedReverbFaderPos(float pos){
             // only process if completely started
             if (state != State_Started){
                 return;

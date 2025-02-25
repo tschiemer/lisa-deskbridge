@@ -21,13 +21,13 @@
 
 #include <syslog.h>
 
-#include "log.h"
+#include "lisa-deskbridge/log.h"
 #include "sqmixmitm/log.h"
 
-#include "Bridge.h"
-#include "bridges/Generic.h"
-#include "bridges/SQ.h"
-#include "bridges/SQMitm.h"
+#include "lisa-deskbridge/Bridge.h"
+#include "lisa-deskbridge/bridges/Generic.h"
+#include "lisa-deskbridge/bridges/SQMidi.h"
+#include "lisa-deskbridge/bridges/SQMitm.h"
 
 static char * argv0 = nullptr;
 
@@ -35,7 +35,7 @@ LisaDeskbridge::Bridge * bridge;
 
 static struct {
     int logLevel;
-    std::basic_string_view<char> bridgeName;
+    std::string bridgeName;
     LisaDeskbridge::Bridge::BridgeOpts bridgeOpts;
     unsigned short localPort;
     std::basic_string_view<char> lisaHost;
@@ -43,7 +43,7 @@ static struct {
 } opts = {
     .logLevel = LisaDeskbridge::LogLevelInfo,
     .bridgeName = "",
-    .localPort = LisaDeskbridge::kRemotePortDefault,
+    .localPort = LisaDeskbridge::kDevicePortDefault,
     .lisaHost = "127.0.0.1",
     .lisaPort = LisaDeskbridge::kLisaControllerPortDefault
 };
@@ -55,12 +55,12 @@ static void help(){
         "Bridge different custom control elements to comfortably control L-ISA Controller.\n"
         "For further documentation see https://github.com/tschiemer/lisa-deskbridge\n"
         "\nArguments:\n"
-        "\t <bridge>                Bridge to use: SQ6\n"
+        "\t <bridge>                Bridge to use: %s, %s, %s\n"
         "\nOptions:\n"
         "\t -h, -?                  Show this help\n"
         "\t -v<verbosity>           Verbose output (in 0 (none), 1 (error), 2 (info = default), 3 (debug)\n"
         "\t -p,--local-port         Local port to receive L-ISA Controller OSC messages (default: %hu)\n"
-        "\t --lisa-host             L-ISA Controller host/ip (default: %s)\n"
+        "\t --lisa-ip             L-ISA Controller host/ip (default: %s)\n"
         "\t --lisa-port             L-ISA Controller port (default: %hu)\n"
         "\t -o,--bridge-opt         Pass (multiple) options to bridge using form 'key=value'\n"
         "\nBridge options:\n"
@@ -72,11 +72,12 @@ static void help(){
         "%s -p 9000 --lisa-port 8880 --lisa-host 127.0.0.1 -o \"midiin=MIDI Control 1\" -o \"midiout=MIDI Control 1\" SQ6 # to use SQ6 bridge with custom options (which happen to be the default ones)\n"
         "%s -v2 -o mixer-ip=10.0.0.100 SQmitm # SQmitm bridge with INFO-level verbosity\n"
         , argv0,
-        LisaDeskbridge::kRemotePortDefault, LisaDeskbridge::kLisaControllerHostDefault.data(), LisaDeskbridge::kLisaControllerPortDefault,
-        LisaDeskbridge::Bridges::Generic::helpOpts,
-        LisaDeskbridge::Bridges::SQ::helpOpts,
-        LisaDeskbridge::Bridges::SQMitm::helpOpts,
-        argv0, argv0, argv0 // examples
+            LisaDeskbridge::Bridges::Generic::kName, LisaDeskbridge::Bridges::SQMidi::kName, LisaDeskbridge::Bridges::SQMitm::kName,
+            LisaDeskbridge::kDevicePortDefault, LisaDeskbridge::kLisaControllerIpDefault, LisaDeskbridge::kLisaControllerPortDefault,
+            LisaDeskbridge::Bridges::Generic::helpOpts,
+            LisaDeskbridge::Bridges::SQMidi::helpOpts,
+            LisaDeskbridge::Bridges::SQMitm::helpOpts,
+            argv0, argv0, argv0 // examples
     );
 }
 
@@ -91,8 +92,12 @@ int main(int argc, char * argv[]) {
         int option_index = 0;
         static struct option long_options[] = {
                 {"local-port", required_argument, 0, 'p'},
-                {"lisa-host",required_argument,0,1},
-                {"lisa-port",required_argument,0,1},
+                {"lisa-ip",required_argument,0,1},
+                {"lisa-port",required_argument,0,2},
+                {"device-id",required_argument,0,3},
+                {"device-name",required_argument,0,4},
+                {"register-device",required_argument,0,5},
+                {"claim-faders",required_argument,0,6},
                 {"bridge-opt", required_argument,0,'o'},
                 {0,0,0,0}
         };
@@ -102,20 +107,37 @@ int main(int argc, char * argv[]) {
         if (c == -1)
             break;
 
-        std::basic_string_view<char> arg, key, value;
+        std::string arg, key, value;
         unsigned int pos;
 
         switch (c) {
 
             case 'p': // local listen port for L-ISA controller messages
+                opts.bridgeOpts["local-port"] = optarg;
                 break;
 
-            case 1: // --lisa-host
-                opts.lisaHost = optarg;
+            case 1: // --lisa-ip
+                opts.bridgeOpts["lisa-controller-ip"] = optarg;
                 break;
 
             case 2: // --lisa-port
-                opts.lisaPort = std::atoi(optarg);
+                opts.bridgeOpts["lisa-controller-port"] = optarg;
+                break;
+
+            case 3: // --device-id
+                opts.bridgeOpts["device-id"] = optarg;
+                break;
+
+            case 4: // --device-name
+                opts.bridgeOpts["device-name"] = optarg;
+                break;
+
+            case 5: // --register
+                opts.bridgeOpts["register"] = optarg;
+                break;
+
+            case 6: // --claim-faders
+                opts.bridgeOpts["claim-faders"] = optarg;
                 break;
 
             case 'o': // bridge specific options
@@ -166,18 +188,17 @@ int main(int argc, char * argv[]) {
         std::cout << "Invalid bridge: " << opts.bridgeName << std::endl;
         return EXIT_FAILURE;
     }
-    LisaDeskbridge::log(LisaDeskbridge::LogLevelInfo, "Using bridge: %s", opts.bridgeName);
+    LisaDeskbridge::log(LisaDeskbridge::LogLevelInfo, "Using bridge: %s", opts.bridgeName.data());
 
-    bridge->setLisaControllerOpts(opts.localPort, opts.lisaHost, opts.lisaPort);
-
-    if (bridge->init() == false){
+    if (bridge->start() == false){
         return EXIT_FAILURE;
     }
+    printf("asdf\n");
 
     // This will run in a process loop until done
     bridge->runloop();
 
-    bridge->deinit();
+    bridge->stop();
 
     return EXIT_SUCCESS;
 }

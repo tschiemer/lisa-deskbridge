@@ -35,7 +35,7 @@ namespace LisaDeskbridge {
 
             static constexpr float kDefaultRelativeStepSize = 0.0025;
 
-            static constexpr char helpOpts[] = "\tSQmitm Options:\n"
+            static constexpr char helpOpts[] = "\tSQ-Mitm Options:\n"
                                                "\t\t mixer-ip=<mixer-ip>               IP of mixer (REQUIRED)\n"
                                                "\t\t mitm-name=<name-of-mitm-service>  Name visible to mixing apps (default: L-ISA Deskbridge)\n";
 

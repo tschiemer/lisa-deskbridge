@@ -35,7 +35,7 @@ namespace LisaDeskbridge {
                 static constexpr char kSQ6MidiControlPortName[] = "MIDI Control 1";
                 static constexpr float kDefaultRelativeStepSize = 0.0025;
 
-                static constexpr char helpOpts[] = "\tSQ6 Options:\n"
+                static constexpr char helpOpts[] = "\tSQ-Midi Options:\n"
                                                    "\t\t midiin    Name of MIDI In port to use (default: 'MIDI Control 1')\n"
                                                    "\t\t midiout    Name of MIDI out port to use (default: 'MIDI Control 1')\n";
 

@@ -59,21 +59,29 @@ static void help(){
         "\nOptions:\n"
         "\t -h, -?                  Show this help\n"
         "\t -v<verbosity>           Verbose output (in 0 (none), 1 (error), 2 (info = default), 3 (debug)\n"
-        "\t -p,--local-port         Local port to receive L-ISA Controller OSC messages (default: %hu)\n"
-        "\t --lisa-ip             L-ISA Controller host/ip (default: %s)\n"
+        "\t --lisa-ip               L-ISA Controller ip (default: %s)\n"
         "\t --lisa-port             L-ISA Controller port (default: %hu)\n"
+        "\t --device-ip             Own OSC target IP as will be registered with L-ISA Controller (default: 127.0.0.1)\n"
+        "\t --device-port           Own OSC target port as will be registered with L-ISA Controller (default: %hu)\n"
+        "\t --device-id             Registration ID of this device with L-ISA Controller (range 1-10, default 1)\n"
+        "\t --device-name           Registration Name this device (default: L-ISA Deskbridge)\n"
+        "\t --claim-level-control   Claims for itself level control (can only be occupied by one device)\n"
         "\t -o,--bridge-opt         Pass (multiple) options to bridge using form 'key=value'\n"
-        "\nBridge options:\n"
+        "\nCommon bridge options:\n"
+        "%s\n"
+        "Specific bridge options:\n"
         "%s\n"
         "%s\n"
         "%s\n"
         "\nExamples:\n"
-        "%s SQ6 #to use SQ6 bridge with default options\n"
-        "%s -p 9000 --lisa-port 8880 --lisa-host 127.0.0.1 -o \"midiin=MIDI Control 1\" -o \"midiout=MIDI Control 1\" SQ6 # to use SQ6 bridge with custom options (which happen to be the default ones)\n"
-        "%s -v2 -o mixer-ip=10.0.0.100 SQmitm # SQmitm bridge with INFO-level verbosity\n"
+        "%s SQ-Midi #to use SQ-Midi bridge with default options\n"
+        "%s -p 9000 --lisa-port 8880 --lisa-host 127.0.0.1 -o \"midiin=MIDI Control 1\" -o \"midiout=MIDI Control 1\" SQ-Midi # to use SQ-Midi bridge with custom options (which happen to be the default ones)\n"
+        "%s -v2 -o mixer-ip=10.0.0.100 SQ-Mitm # SQ-Mitm bridge with INFO-level verbosity\n"
         , argv0,
             LisaDeskbridge::Bridges::Generic::kName, LisaDeskbridge::Bridges::SQMidi::kName, LisaDeskbridge::Bridges::SQMitm::kName,
-            LisaDeskbridge::kDevicePortDefault, LisaDeskbridge::kLisaControllerIpDefault, LisaDeskbridge::kLisaControllerPortDefault,
+             LisaDeskbridge::kLisaControllerIpDefault, LisaDeskbridge::kLisaControllerPortDefault,
+            LisaDeskbridge::kDevicePortDefault,
+            LisaDeskbridge::Bridge::helpOpts,
             LisaDeskbridge::Bridges::Generic::helpOpts,
             LisaDeskbridge::Bridges::SQMidi::helpOpts,
             LisaDeskbridge::Bridges::SQMitm::helpOpts,
@@ -91,13 +99,13 @@ int main(int argc, char * argv[]) {
 
         int option_index = 0;
         static struct option long_options[] = {
-                {"local-port", required_argument, 0, 'p'},
                 {"lisa-ip",required_argument,0,1},
                 {"lisa-port",required_argument,0,2},
-                {"device-id",required_argument,0,3},
-                {"device-name",required_argument,0,4},
-                {"register-device",required_argument,0,5},
-                {"claim-faders",required_argument,0,6},
+                {"device-ip",required_argument,0,3},
+                {"device-port",required_argument,0,4},
+                {"device-id",required_argument,0,5},
+                {"device-name",required_argument,0,6},
+                {"claim-level-control",required_argument,0,7},
                 {"bridge-opt", required_argument,0,'o'},
                 {0,0,0,0}
         };
@@ -112,10 +120,6 @@ int main(int argc, char * argv[]) {
 
         switch (c) {
 
-            case 'p': // local listen port for L-ISA controller messages
-                opts.bridgeOpts["local-port"] = optarg;
-                break;
-
             case 1: // --lisa-ip
                 opts.bridgeOpts["lisa-controller-ip"] = optarg;
                 break;
@@ -125,19 +129,23 @@ int main(int argc, char * argv[]) {
                 break;
 
             case 3: // --device-id
-                opts.bridgeOpts["device-id"] = optarg;
+                opts.bridgeOpts["device-ip"] = optarg;
                 break;
 
             case 4: // --device-name
+                opts.bridgeOpts["device-port"] = optarg;
+                break;
+
+            case 5: // --device-id
+                opts.bridgeOpts["device-id"] = optarg;
+                break;
+
+            case 6: // --device-name
                 opts.bridgeOpts["device-name"] = optarg;
                 break;
 
-            case 5: // --register
-                opts.bridgeOpts["register"] = optarg;
-                break;
-
-            case 6: // --claim-faders
-                opts.bridgeOpts["claim-faders"] = optarg;
+            case 7: // --claim-level-control
+                opts.bridgeOpts["claim-level-control"] = optarg;
                 break;
 
             case 'o': // bridge specific options
@@ -193,7 +201,6 @@ int main(int argc, char * argv[]) {
     if (bridge->start() == false){
         return EXIT_FAILURE;
     }
-    printf("asdf\n");
 
     // This will run in a process loop until done
     bridge->runloop();

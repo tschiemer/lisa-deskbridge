@@ -46,9 +46,14 @@ namespace LisaDeskbridge {
 
             static constexpr char kOptClaimLevelControl[]   = "claim-level-control";
 
-//            static constexpr char helpOpts[] = "\tGeneral Options:\n"
-//                                               "\t\t lisa-controller-ip    Name of MIDI In port to use\n"
-//                                               "\t\t midiout    Name of MIDI out port to use \n";
+            static constexpr char helpOpts[] = "\n"
+                                               "\t lisa-controller-ip\n"
+                                               "\t lisa-controller-port\n"
+                                               "\t device-ip\n"
+                                               "\t device-port\n"
+                                               "\t device-id\n"
+                                               "\t device-name\n"
+                                               "\t claim-level-control\n";
 
         protected: // Core
 

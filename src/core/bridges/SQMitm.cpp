@@ -46,13 +46,6 @@ namespace LisaDeskbridge {
 
         void SQMitm::initMitm() {
 
-            static bool initializedOnce = false;
-
-            if (initializedOnce){
-                return;
-            }
-            initializedOnce = true;
-
             mitm_.onConnectionStateChanged([&](SQMixMitm::MixMitm::ConnectionState state, SQMixMitm::Version &version){
                 if (state == SQMixMitm::MixMitm::Connected) {
 

@@ -163,15 +163,17 @@ namespace LisaDeskbridge {
 
     void Bridge::runloop(){
 
-//        if (bridgeSingleton != nullptr){
-//            throw std::logic_error("Bridge is a singleton ");
-//        }
 
         log(LogLevelInfo, "Running loops..");
 
 #if defined(__APPLE__)
 // On macOS, observation can *only* be done in the main thread
 // with an active CFRunLoop.
+
+        if (bridgeSingleton != nullptr){
+            throw std::logic_error("Bridge is a singleton ");
+        }
+        bridgeSingleton = this;
 
         runLoopRef = CFRunLoopGetCurrent();
 

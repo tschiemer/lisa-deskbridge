@@ -345,12 +345,12 @@
                                                 <popUpButton verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="8eP-U2-XRe">
                                                     <rect key="frame" x="164" y="183" width="209" height="25"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                                    <popUpButtonCell key="cell" type="push" title="Select " bezelStyle="rounded" alignment="center" lineBreakMode="truncatingTail" borderStyle="border" inset="2" selectedItem="TiV-YQ-Uco" id="kTA-3g-XLc">
+                                                    <popUpButtonCell key="cell" type="push" title="Select " bezelStyle="rounded" alignment="center" lineBreakMode="truncatingTail" state="on" borderStyle="border" inset="2" selectedItem="TiV-YQ-Uco" id="kTA-3g-XLc">
                                                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                                         <font key="font" metaFont="message"/>
                                                         <menu key="menu" id="ceq-es-uxW">
                                                             <items>
-                                                                <menuItem title="Select " enabled="NO" id="TiV-YQ-Uco"/>
+                                                                <menuItem title="Select " state="on" enabled="NO" id="TiV-YQ-Uco"/>
                                                                 <menuItem title="SQ-Mitm" tag="1" id="GBn-i9-k8S"/>
                                                                 <menuItem title="SQ-Midi" tag="2" id="LKk-he-IVs"/>
                                                                 <menuItem title="Generic" tag="3" id="1L4-NJ-vfa"/>
@@ -651,7 +651,7 @@ https://github.com/RossBencina/oscpack</string>
                                                     <rect key="frame" x="8" y="9" width="437" height="59"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                     <textFieldCell key="cell" selectable="YES" id="CMx-ZX-vOB">
-                                                        <font key="font" metaFont="system" size="11"/>
+                                                        <font key="font" metaFont="smallSystem"/>
                                                         <string key="title">This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more details.</string>
                                                         <color key="textColor" name="secondaryLabelColor" catalog="System" colorSpace="catalog"/>
                                                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -682,6 +682,7 @@ https://github.com/RossBencina/oscpack</string>
                                     <font key="font" metaFont="system"/>
                                 </buttonCell>
                                 <connections>
+                                    <action selector="onDebugModeChanged:" target="hZe-3S-obU" id="vOY-mO-tvX"/>
                                     <outlet property="nextKeyView" destination="xi1-52-qrL" id="RSG-pd-vSe"/>
                                 </connections>
                             </button>
@@ -892,7 +893,7 @@ https://github.com/RossBencina/oscpack</string>
                                     </subviews>
                                 </clipView>
                                 <scroller key="horizontalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="Kek-HI-v7n">
-                                    <rect key="frame" x="1" y="253" width="731" height="15"/>
+                                    <rect key="frame" x="1" y="253" width="1038" height="15"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                                 <scroller key="verticalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="ejp-DU-gxc">

@@ -65,9 +65,14 @@ namespace LisaDeskbridge {
 
             mitm_.onEvent(SQMixMitm::Event::Type::ChannelSelect, [&](SQMixMitm::Event &event){
 
-                log(LogLevelDebug, "event ChannelSelect %d", event.ChannelSelect_channel());
+                log(LogLevelDebug, "event ChannelSelect physical %d virtual %d state %d", event.ChannelSelect_physical_strip(), event.ChannelSelect_channel(), event.ChannelSelect_onoff());
 
                 if (mitm_.connectionState() != SQMixMitm::MixMitm::Connected || mitm_.state() != SQMixMitm::MixMitm::Running){
+                    return;
+                }
+
+                // only channel select events with an ON state have an actually meaningful channel/source
+                if (!event.ChannelSelect_onoff()){
                     return;
                 }
 
@@ -163,11 +168,15 @@ namespace LisaDeskbridge {
             // channel number starts at 0
             channel += 1;
 
+            if (!isValidSourceId(channel)){
+                return;
+            }
+
             if ((softBtn1_ == Pressed || followSelect_) &&
                 softBtn2_ == Released &&
                 softBtn3_ == Released &&
                 softBtn4_ == Released){
-                lisaControllerProxy_.selectSource(channel);
+                    lisaControllerProxy_.selectSource(channel);
             }
             else if (softBtn1_ == Released &&
                      softBtn2_ == Pressed &&

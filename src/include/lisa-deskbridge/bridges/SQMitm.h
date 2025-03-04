@@ -53,7 +53,7 @@ namespace LisaDeskbridge {
 
         protected:  // Controller logic
 
-            bool followSelect_ = false;
+            bool followSelect_ = true;
 
             enum ButtonState softBtn1_ = Released;
             enum ButtonState softBtn2_ = Released;

@@ -158,8 +158,37 @@ namespace LisaDeskbridge {
 
         void SQMitm::onSelectedChannel(int channel){
 
-            // channel number starts at 0
-            channel += 1;
+//            | Console Channel | ID (as per event) |
+//            |-----------------|-------------------|
+//            | 1-40            | 0 - 39            | 1-40
+//            | ST1             | 40                | 41
+//            | ST2             | 42                | 43
+//            | ST3             | 44                | 45
+//            | USB             | 46                | 47
+//            | FX Ret 1-8      | 64-71             | -> 49 - 56
+//            | Group 1-12      | 72 - 83           | -> 57 - 68
+//            | Aux 1-12        | 88 - 99           | -> 69 - 80
+//            | FX Send 1-4     | 107-110           | -> 81 -84
+//            | MainLR          | 104               | -> 85
+//            | Matrix 1-3      | 115-117           | -> 87 -
+
+            if (0 <= channel && channel <= 47){ // inputs (incl ST1-3+USB)
+                channel += 1;
+            } else if (64 <= channel && channel <= 71) { // FX Ret 1-8
+                channel -= 15;
+            } else if (72 <= channel && channel <= 83) { // Groups 1-12
+                channel -= 15;
+            } else if (88 <= channel && channel <= 99) { // Aux 1-12
+                channel -= 19;
+            } else if (107 <= channel && channel <= 110) { // FX Send 1-4
+                channel -= 26;
+            } else if (channel == 104) { // Main LR
+                channel = 85;
+            } else if (115 <= channel && channel <= 120) { // Matrix 1-6
+                channel -= 28;
+            } else {
+                return;
+            }
 
             if (!isValidSourceId(channel)){
                 return;

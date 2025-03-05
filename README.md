@@ -99,7 +99,50 @@ Create a virtual MIDI device `L-ISA Deskbridge` and optionally connects to MIDI 
 
 *7bit signed int, ie 1-64 are positive values, 127-64 are negative values
 
-### SQ6
+#### SQ-Mitm
+
+This bridge pretends to be a SQ-type mixing console. To use:
+
+1. Make sure your computer is in the same network as the control port of the mixing console (example ip 10.0.0.2)
+2. Run bridge passing it the mixer ip.
+3. Start official SQ MixPad application (on the same or other device) and connect to mixer labelled `L-ISA Deskbridge`. *PLEASE NOTE* that per network interface there might be multiple instances of this bridge visible.
+
+![SQ MixPad](resources/macosx/SQMixPad.png)
+
+##### Source ID table
+
+| Console Channel | Internal console ID | OSC Source ID |
+|-----------------|---------------------|---------------|
+| Input 1-40      | 0 - 39              | 1-40          |
+| ST1             | 40                  | 41            |
+| ST2             | 42                  | 43            |
+| ST3             | 44                  | 45            |
+| USB             | 46                  | 47            |
+| FX Ret 1-8      | 64-71               | -> 49 - 56    |
+| Group 1-12      | 72 - 83             | -> 57 - 68    |
+| Aux 1-12        | 88 - 99             | -> 69 - 80    |
+| FX Send 1-4     | 107-110             | -> 81 -84     |
+| MainLR          | 104                 | -> 85         |
+| Matrix 1-3      | 115-117             | -> 87 -       |
+
+##### MIDI Config
+
+| MIDI                    | L-ISA Controller command            | Alternate function*                               | 
+|-------------------------|-------------------------------------|---------------------------------------------------|
+| Channel 1 Note on 1     | Select 1 + Source select            | Toggle auto selection                             |
+| Channel 1 Note on 2     | Add to Selection + Source select    |                                                   |
+| Channel 1 Note on 3     | Snap + Source select                |                                                   |
+| Channel 1 Note on 4     | Alternative function (keep pressed) |                                                   |
+| Channel 1 CC 1 relative | Relative Pan                        |                                                   |
+| Channel 1 CC 2 relative | Relative Pan Spread                 | Relative Width                                    |
+| Channel 1 CC 3 relative | Relative Distance                   |                                                   |
+| Channel 1 CC 4 relative | Relative Elevation                  | Relative Aux Send of last single source selection |
+| Channel 2 Note on 1-96  | Select group 1-96                   |                                                   |
+| Channel 3 Note on N     | Fire snapshot N                     |                                                   |
+
+* MIDI 
+
+#### SQ-Midi
 
 Was originally designed for the use of a A&H SQ6 mixing desk where the custom controls look as follows: 
 

@@ -323,35 +323,34 @@ namespace LisaDeskbridge {
                         if (softBtn4_ == Released) {
                             lisaControllerProxy_.setSelectedSourcesRelativePan(r);
                         } else {
-                            // do nothing
+                            lisaControllerProxy_.setSelectedSourcesRelativeElevation(r);
                         }
                     } else if (cc == 2){
                         if (softBtn4_ == Released) {
                             lisaControllerProxy_.setSelectedSourcesRelativePanSpread(r);
                         } else {
-                            lisaControllerProxy_.setSelectedSourcesRelativeWidth(r);
+                            // do nothing
                         }
                     } else if (cc == 3){
                         if (softBtn4_ == Released) {
-                            lisaControllerProxy_.setSelectedSourcesRelativeDistance(r);
+                            lisaControllerProxy_.setSelectedSourcesRelativeWidth(r);
                         } else {
+                            // do nothing
                         }
                     } else if (cc == 4){
                         if (softBtn4_ == Released) {
-                            lisaControllerProxy_.setSelectedSourcesRelativeElevation(r);
+                            lisaControllerProxy_.setSelectedSourcesRelativeDistance(r);
                         } else {
                             lisaControllerProxy_.setSelectedSourceRelativeAuxSend(r);
                         }
                     } else if (cc == 5){
-                        // not used
+                        lisaControllerProxy_.setSelectedSourcesRelativeElevation(r);
                     } else if (cc == 6){
-                        if (softBtn4_ == Released) {
-                            lisaControllerProxy_.setSelectedSourcesRelativeWidth(r);
-                        } else if (cc == 7){
-                            // not used
-                        }
-                    } else if (cc == 8){
                         lisaControllerProxy_.setSelectedSourceRelativeAuxSend(r);
+                    } else if (cc == 7){
+                        // not used
+                    } else if (cc == 8){
+                        // not used
                     }
                 }
             } // channel == 1

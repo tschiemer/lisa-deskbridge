@@ -23,11 +23,12 @@
 #include "../Bridge.h"
 #include "sqmixmitm/DiscoveryResponder.h"
 #include "sqmixmitm/MixMitm.h"
+#include "../MidiClient.h"
 
 namespace LisaDeskbridge {
     namespace Bridges {
 
-        class SQMitm : public Bridge {
+        class SQMitm : public Bridge, public LisaDeskbridge::MidiReceiver::Delegate {
 
         public:
 
@@ -37,7 +38,9 @@ namespace LisaDeskbridge {
 
             static constexpr char helpOpts[] = "\tSQ-Mitm Options:\n"
                                                "\t\t mixer-ip=<mixer-ip>               IP of mixer (REQUIRED)\n"
-                                               "\t\t mitm-name=<name-of-mitm-service>  Name visible to mixing apps (default: L-ISA Deskbridge)\n";
+                                               "\t\t mitm-name=<name-of-mitm-service>  Name visible to mixing apps (default: L-ISA Deskbridge)\n"
+                                               "\t\t midiin    Name of MIDI In port to use\n"
+                                               "\t\t midiout    Name of MIDI out port to use \n";
 
         protected:
 
@@ -50,6 +53,12 @@ namespace LisaDeskbridge {
 
             SQMixMitm::DiscoveryResponder discoveryResponder_;
             SQMixMitm::MixMitm mitm_;
+
+
+            std::string midiInPortName_ = "";
+            std::string midiOutPortName_ = "";
+
+            MidiClient midiClient_;
 
         protected:  // Controller logic
 
@@ -65,8 +74,13 @@ namespace LisaDeskbridge {
 
             SQMitm(BridgeOpts &opts);
 
+            void setFollowSelect(bool enabled);
+
         protected:
             void initMitm();
+
+            bool startMidiClient();
+            void stopMidiClient();
 
             bool startImpl();
             void stopImpl();
@@ -84,6 +98,23 @@ namespace LisaDeskbridge {
 
             void onMidiFaderLevel(int channel, int value);
             void onMidiFaderMute(int channel);
+
+        public: // LisaDeskbridge::MidiReceiver::Delegate
+
+            void receivedNoteOn(int channel, int note, int velocity){
+                onMidiNoteOn(channel, note, velocity);
+            }
+
+            void receivedNoteOff(int channel, int note, int velocity){
+                onMidiNoteOff(channel, note, velocity);
+            }
+
+            void receivedControlChange(int channel, int cc, int value){
+                onMidiControlChange(channel, cc, value);
+            }
+
+            void receivedPitchBend(int channel, int bend);
+
 
         protected: // LisaDeskbridge::LisaControllerProxy::Delegate
 

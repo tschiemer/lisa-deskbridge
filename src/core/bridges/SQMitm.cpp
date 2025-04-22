@@ -28,7 +28,9 @@ namespace LisaDeskbridge {
 
 
         SQMitm::SQMitm(BridgeOpts &opts) :
-                Bridge(opts){
+                Bridge(opts),
+                midiClient_(*this)
+                {
             if (opts.contains("mixer-ip")){
                 mixerIp_ = opts["mixer-ip"];
                 //TODO validate
@@ -41,8 +43,23 @@ namespace LisaDeskbridge {
             if (opts.contains("mitm-name")){
                 mitmName_ = opts["mitm-name"];
             }
+            if (opts.contains("midiin")){
+                midiInPortName_ = opts["midiin"];
+            }
+            if (opts.contains("midiout")){
+                midiOutPortName_ = opts["midiout"];
+            }
         }
 
+        void SQMitm::setFollowSelect(bool enabled){
+            followSelect_ = enabled;
+
+            if (enabled){
+                midiClient_.sendNoteOff(0,5,0);
+            } else {
+                midiClient_.sendNoteOn(0,5,127);
+            }
+        }
 
         void SQMitm::initMitm() {
 
@@ -120,13 +137,46 @@ namespace LisaDeskbridge {
 
         }
 
+        bool SQMitm::startMidiClient() {
+            if (midiInPortName_.length() == 0 && midiOutPortName_.length() == 0){
+//                error("No midi in- or out-port defined!");
+                log(LogLevelInfo, "Not using MIDI Client." );
+                return true;
+            }
+
+            log(LogLevelInfo, "Starting MIDI Client.." );
+            try {
+                midiClient_.start(midiInPortName_, midiOutPortName_);
+            } catch (const std::exception & e){
+                log(LogLevelError, "starting MIDI Client: %s", e.what() );
+                return false;
+            }
+
+            return true;
+        }
+
+        void SQMitm::stopMidiClient() {
+            if (midiInPortName_.length() == 0 && midiOutPortName_.length() == 0){
+                return;
+            }
+
+            log(LogLevelInfo, "Stopping MIDI Client.." );
+            midiClient_.stop();
+        }
+
         bool SQMitm::startImpl(){
+
+            if (startMidiClient() == false){
+                return false;
+            }
+
 
             initMitm();
 
             log(LogLevelInfo, "Starting SQ MITM Service for mixer at %s", mixerIp_.data());
 
             if (mitm_.start((char*)mixerIp_.data())){
+                stopMidiClient();
                 return false;
             }
 
@@ -154,6 +204,9 @@ namespace LisaDeskbridge {
 
         log(LogLevelInfo, "Stopping SQ MITM Service..");
         mitm_.stop();
+
+        stopMidiClient();
+
     }
 
         void SQMitm::onSelectedChannel(int channel){
@@ -250,16 +303,17 @@ namespace LisaDeskbridge {
             log(LogLevelDebug, "midi Note On ch(%d) note(%d) velocity(%d)", channel, note, velocity);
 
             if (channel == 1){
-                if (!isValidDeviceId(note)){
-                    return;
-                }
+//                if (!isValidDeviceId(note)){
+//                    return;
+//                }
+//                lisaControllerProxy_.setSelectedSourceSolo(note);
 
                 if (note == 1){
                     softBtn1_ = Pressed;
 
                     // if ALT button is pressed toggle the auto-follow
                     if (softBtn4_ == Pressed){
-                        followSelect_ = !followSelect_;
+                        setFollowSelect(!followSelect_);
                     }
                 }
                 else if (note == 2){
@@ -271,6 +325,12 @@ namespace LisaDeskbridge {
                 }
                 else if (note == 4){
                     softBtn4_ = Pressed;
+                }
+                else if (note == 5){
+                    setFollowSelect(false);
+                }
+                else if (note == 8){
+                    lisaControllerProxy_.tapTempo();
                 }
             }
 
@@ -289,6 +349,14 @@ namespace LisaDeskbridge {
                 lisaControllerProxy_.fireSnapshot(note);
             }
             else if (channel == 4){
+                if (!isValidReverbId(note)){
+                    return;
+                }
+
+                lisaControllerProxy_.loadReverbPreset(note);
+            }
+            else if (channel == 5){
+                //...
             } // channel == 3
         }
 
@@ -307,6 +375,9 @@ namespace LisaDeskbridge {
             }
             else if (channel == 1 && note == 4){
                 softBtn4_ = Released;
+            }
+            else if (channel == 1 && note == 5){
+                setFollowSelect(true);
             }
         }
 
@@ -350,7 +421,8 @@ namespace LisaDeskbridge {
                     } else if (cc == 7){
                         // not used
                     } else if (cc == 8){
-                        // not used
+                        float bpm = ((float)value * (270.0 / 128.0)) + 30.0;
+                        lisaControllerProxy_.setBPM(bpm);
                     }
                 }
             } // channel == 1
@@ -402,6 +474,11 @@ namespace LisaDeskbridge {
 
         void SQMitm::onMidiFaderMute(int channel){
 
+        }
+
+        void SQMitm::receivedPitchBend(int channel, int bend){
+
+            log(LogLevelDebug,"midi pitchbend ch(%d) bend(%d)", channel, bend);
         }
 
         void SQMitm::receivedMasterFaderPos(float pos){

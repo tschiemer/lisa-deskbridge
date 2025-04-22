@@ -44,6 +44,7 @@ struct OpaqueBridge;
 @property (weak, nonatomic) IBOutlet NSPopUpButton *bridgeSelect;
 @property (weak, nonatomic) IBOutlet NSTextField *mixerIpText;
 @property (weak, nonatomic) IBOutlet NSButton *findMixerIpButton;
+@property (weak, nonatomic) IBOutlet NSTextField *midiPortText;
 
 // L-ISA Controller Tab
 @property (weak, nonatomic) IBOutlet NSTextField *lisaControllerIpText;
@@ -77,6 +78,7 @@ struct OpaqueBridge;
 -(IBAction)onMixerIpFindButton:(id)sender;
 -(void)didSelectMixerIp:(NSString*)ip withName:(NSString*)name;
 
+- (IBAction)onMidiPortChanged:(id)sender;
 
 // L-ISA Controller Tab
 

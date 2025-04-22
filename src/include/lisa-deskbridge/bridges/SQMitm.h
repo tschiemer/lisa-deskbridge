@@ -39,8 +39,7 @@ namespace LisaDeskbridge {
             static constexpr char helpOpts[] = "\tSQ-Mitm Options:\n"
                                                "\t\t mixer-ip=<mixer-ip>               IP of mixer (REQUIRED)\n"
                                                "\t\t mitm-name=<name-of-mitm-service>  Name visible to mixing apps (default: L-ISA Deskbridge)\n"
-                                               "\t\t midiin    Name of MIDI In port to use\n"
-                                               "\t\t midiout    Name of MIDI out port to use \n";
+                                               "\t\t midi-port    Name of MIDI In/Out port to use\n";
 
         protected:
 
@@ -55,8 +54,7 @@ namespace LisaDeskbridge {
             SQMixMitm::MixMitm mitm_;
 
 
-            std::string midiInPortName_ = "";
-            std::string midiOutPortName_ = "";
+            std::string midiPortName_ = "";
 
             MidiClient midiClient_;
 

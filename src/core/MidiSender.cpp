@@ -18,6 +18,7 @@
 
 #include "MidiSender.h"
 
+#include "log.h"
 #include <iostream>
 
 namespace LisaDeskbridge {
@@ -31,6 +32,8 @@ namespace LisaDeskbridge {
             return;
         }
 
+        log(LogLevelDebug,"TX midi note on ch(%d) note(%d) vel(%d)", channel, note, velocity);
+
         midiOut.send_message( ((int)libremidi::message_type::NOTE_ON | channel), note, velocity);
     }
 
@@ -43,6 +46,8 @@ namespace LisaDeskbridge {
             return;
         }
 
+        log(LogLevelDebug,"TX midi note off ch(%d) note(%d) vel(%d)", channel, note, velocity);
+
         midiOut.send_message( ((int)libremidi::message_type::NOTE_OFF | channel), note, velocity);
     }
 
@@ -54,6 +59,8 @@ namespace LisaDeskbridge {
         if (!midiOut.is_port_open()){
             return;
         }
+
+        log(LogLevelDebug,"TX midi cc ch(%d) cc(%d) val(%d)", channel, cc, value);
 
         midiOut.send_message( ((int)libremidi::message_type::CONTROL_CHANGE | channel), cc, value);
     }

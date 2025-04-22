@@ -281,6 +281,14 @@ struct OpaqueBridge {
 }
 
 
+- (IBAction)onMidiPortChanged:(id)sender {
+    NSLog(@"Changed MIDI Port: %@", _midiPortText.stringValue);
+    
+    [Settings set:@"midi-port" value:_midiPortText.stringValue];
+    
+    [self settingsChanged:YES];
+}
+
 #pragma L-ISA Controller Tab
 
 - (IBAction)onLisaControllerIpChanged:(id)sender {
@@ -389,6 +397,8 @@ struct OpaqueBridge {
     [self.deviceIDSelect selectItemWithTitle:[Settings get:@"device-id"]];
     _deviceNameText.stringValue = [Settings get:@"device-name"];
     
+    _midiPortText.stringValue = [Settings get:@"midi-port"];
+    
     _claimLevelControlCheckbox.state = [[Settings get:@"claim-level-control"] intValue] == 1;
 #endif
     
@@ -466,6 +476,8 @@ struct OpaqueBridge {
     _deviceIDSelect.enabled = enabled;
     _deviceNameText.enabled = enabled;
     _claimLevelControlCheckbox.enabled = enabled;
+    
+    _midiPortText.enabled = enabled;
 
     _debugCheckbox.enabled = enabled;
 

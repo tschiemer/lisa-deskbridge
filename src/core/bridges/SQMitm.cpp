@@ -43,11 +43,8 @@ namespace LisaDeskbridge {
             if (opts.contains("mitm-name")){
                 mitmName_ = opts["mitm-name"];
             }
-            if (opts.contains("midiin")){
-                midiInPortName_ = opts["midiin"];
-            }
-            if (opts.contains("midiout")){
-                midiOutPortName_ = opts["midiout"];
+            if (opts.contains("midi-port")){
+                midiPortName_ = opts["midi-port"];
             }
         }
 
@@ -138,7 +135,7 @@ namespace LisaDeskbridge {
         }
 
         bool SQMitm::startMidiClient() {
-            if (midiInPortName_.length() == 0 && midiOutPortName_.length() == 0){
+            if (midiPortName_.length() == 0){
 //                error("No midi in- or out-port defined!");
                 log(LogLevelInfo, "Not using MIDI Client." );
                 return true;
@@ -146,7 +143,7 @@ namespace LisaDeskbridge {
 
             log(LogLevelInfo, "Starting MIDI Client.." );
             try {
-                midiClient_.start(midiInPortName_, midiOutPortName_);
+                midiClient_.start(midiPortName_, midiPortName_);
             } catch (const std::exception & e){
                 log(LogLevelError, "starting MIDI Client: %s", e.what() );
                 return false;
@@ -156,7 +153,7 @@ namespace LisaDeskbridge {
         }
 
         void SQMitm::stopMidiClient() {
-            if (midiInPortName_.length() == 0 && midiOutPortName_.length() == 0){
+            if (midiPortName_.length() == 0 ){
                 return;
             }
 
@@ -489,7 +486,7 @@ namespace LisaDeskbridge {
 
 //            SQMixMitm::Command cmd = SQMixMitm::Command::midiFaderLevel()
             //TODO
-//            sqMidiControlClient.sendControlChange(1,0,(int)(127.0 * pos));
+            midiClient_.sendControlChange(2,0,(int)(127.0 * pos));
         }
 
         void SQMitm::receivedReverbFaderPos(float pos){
@@ -499,7 +496,7 @@ namespace LisaDeskbridge {
             }
 
             //TODO
-//            sqMidiControlClient.sendControlChange(1,1,(int)(127.0 * pos));
+            midiClient_.sendControlChange(2,1,(int)(127.0 * pos));
         }
 
 

@@ -92,9 +92,9 @@ if (APPLE)
 
             MACOSX_BUNDLE_GUI_IDENTIFIER                    "tschiemer.lisa-deskbridge.macosx"
             MACOSX_BUNDLE_BUNDLE_NAME                       "L-ISA Deskbridge"
-            MACOSX_BUNDLE_BUNDLE_VERSION                    "1.0.0"
-            MACOSX_BUNDLE_SHORT_VERSION_STRING              "1.0.0~alpha"
-            MACOSX_BUNDLE_LONG_VERSION_STRING               "1.0.0~alpha"
+            MACOSX_BUNDLE_BUNDLE_VERSION                    "1.1.0"
+            MACOSX_BUNDLE_SHORT_VERSION_STRING              "1.1.0~alpha"
+            MACOSX_BUNDLE_LONG_VERSION_STRING               "1.1.0~alpha"
             MACOSX_BUNDLE_COPYRIGHT                         "Copyright (C) 2025 Philip Tschiemer GNU Affero General Public License v3"
             MACOSX_BUNDLE_EXECUTABLE_NAME                   lisa-deskbridge-macosx
             MACOSX_BUNDLE_ICON_FILE                         "AppIcon"
